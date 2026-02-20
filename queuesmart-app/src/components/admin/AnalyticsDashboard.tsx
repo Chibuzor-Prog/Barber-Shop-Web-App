@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import Navbar from "../common/Navbar";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+
+import AdminPageLayout from "./ui/AdminPageLayout";
+import SectionCard from "./ui/SectionCard";
 import { services } from "../../data/mockServices";
 
 type QueueLengths = Record<number, number>;
@@ -21,7 +31,7 @@ const NAMES = [
 ];
 
 // Helper: generate random users for a service
-const generateUsers = (count: number) =>
+const generateUsers = (count: number): TicketUser[] =>
   Array.from({ length: count }).map((_, i) => ({
     id: Date.now() + Math.random() * 10000 + i,
     name: NAMES[Math.floor(Math.random() * NAMES.length)],
@@ -32,14 +42,17 @@ const generateUsers = (count: number) =>
 const AnalyticsDashboard: React.FC = () => {
   // Initialize users per service
   const [queueUsers, setQueueUsers] = useState<Record<number, TicketUser[]>>(() => {
-    const storedUsers = JSON.parse(localStorage.getItem("queueUsers") || "null");
+    const raw = localStorage.getItem("queueUsers");
+    const storedUsers = raw ? JSON.parse(raw) : null;
+
     if (storedUsers) return storedUsers;
+
     return Object.fromEntries(
       Object.entries(MOCK_QUEUE_LENGTHS).map(([id, count]) => [
         Number(id),
-        generateUsers(Number(count))
+        generateUsers(Number(count)),
       ])
-    );
+    ) as Record<number, TicketUser[]>;
   });
 
   // Persist to localStorage so it syncs with QueueManagement
@@ -48,28 +61,30 @@ const AnalyticsDashboard: React.FC = () => {
   }, [queueUsers]);
 
   // Compute analytics data
-  const data = services.map(service => {
+  const data = services.map((service) => {
     const users = queueUsers[service.id] || [];
     return {
       service: service.name,
-      waiting: users.filter(u => !u.served).length,
-      served: users.filter(u => u.served).length,
+      waiting: users.filter((u) => !u.served).length,
+      served: users.filter((u) => u.served).length,
     };
   });
 
   return (
-    <div>
-      <Navbar isAdmin />
-      <div className="p-6">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">
-          Queue Analytics
-        </h2>
+    <AdminPageLayout title="Analytics">
+      {/* Chart */}
+      <SectionCard>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Queue Analytics</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Waiting vs served customers per service (live from localStorage).
+          </p>
+        </div>
 
-        {/* Live bar chart */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded shadow">
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-              <XAxis dataKey="service" />
+        <div className="h-[420px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+              <XAxis dataKey="service" tickMargin={8} />
               <YAxis />
               <Tooltip />
               <Legend />
@@ -78,23 +93,44 @@ const AnalyticsDashboard: React.FC = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </SectionCard>
 
-        {/* Optional live summary per service */}
-        <div className="mt-6 space-y-2">
-          {services.map(service => {
+      {/* Summary list */}
+      <SectionCard>
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Live Summary</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Quick breakdown by service.
+          </p>
+        </div>
+
+        <div className="divide-y divide-gray-100">
+          {services.map((service) => {
             const users = queueUsers[service.id] || [];
+            const waiting = users.filter((u) => !u.served).length;
+            const served = users.filter((u) => u.served).length;
+
             return (
-              <div key={service.id} className="flex justify-between items-center border p-2 rounded">
-                <span className="font-semibold">{service.name}</span>
-                <span className="text-gray-700">
-                  {users.filter(u => !u.served).length} waiting, {users.filter(u => u.served).length} served
-                </span>
+              <div
+                key={service.id}
+                className="flex items-center justify-between py-3"
+              >
+                <span className="font-medium text-gray-900">{service.name}</span>
+
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-yellow-800">
+                    {waiting} waiting
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-green-800">
+                    {served} served
+                  </span>
+                </div>
               </div>
             );
           })}
         </div>
-      </div>
-    </div>
+      </SectionCard>
+    </AdminPageLayout>
   );
 };
 
