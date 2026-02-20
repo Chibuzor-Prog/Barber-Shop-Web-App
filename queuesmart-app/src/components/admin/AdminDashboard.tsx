@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
-import Navbar from "../common/Navbar";
+import React, { useEffect, useMemo, useState } from "react";
 import { services } from "../../data/mockServices";
+import AdminPageLayout from "./ui/AdminPageLayout";
+import SectionCard from "./ui/SectionCard";
+import StatCard from "./ui/StatCard";
 
 type TicketUser = {
   id: number;
@@ -25,57 +27,96 @@ const AdminDashboard: React.FC = () => {
     const interval = setInterval(() => {
       const stored = localStorage.getItem("queueUsers");
       if (stored) setQueueUsers(JSON.parse(stored));
+      else setQueueUsers({});
     }, 500);
 
     return () => clearInterval(interval);
   }, []);
 
+  const totals = useMemo(() => {
+    const allUsers = Object.values(queueUsers).flat();
+    const waiting = allUsers.filter((u) => !u.served).length;
+    const served = allUsers.filter((u) => u.served).length;
+
+    return {
+      waiting,
+      served,
+      activeServices: services.length,
+      avgWait: waiting * AVG_SERVICE_TIME,
+    };
+  }, [queueUsers]);
+
   return (
-    <div>
-      <Navbar isAdmin />
-      <div className="p-8">
-        <h2 className="text-4xl font-bold mb-8 text-gray-800 dark:text-white">
-          Admin Dashboard
-        </h2>
-
-        {/* Table Header */}
-        <div className="grid grid-cols-3 font-semibold text-lg border-b pb-3 mb-4 text-gray-700 dark:text-gray-200">
-          <span>Services</span>
-          <span className="text-center">Total in Queue</span>
-          <span className="text-right">Total Waiting Time</span>
-        </div>
-
-        {/* Services Rows */}
-        <div className="space-y-4">
-          {services.map((service) => {
-            const users = queueUsers[service.id] || [];
-            const waitingUsers = users.filter((u) => !u.served);
-
-            const totalInQueue = waitingUsers.length;
-            const totalWaitingTime = totalInQueue * AVG_SERVICE_TIME;
-
-            return (
-              <div
-                key={service.id}
-                className="grid grid-cols-3 items-center bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 hover:shadow-lg transition"
-              >
-                <span className="font-medium text-gray-800 dark:text-white">
-                  {service.name}
-                </span>
-
-                <span className="text-center font-bold text-blue-600 text-lg">
-                  {totalInQueue}
-                </span>
-
-                <span className="text-right text-gray-600 dark:text-gray-300">
-                  {totalWaitingTime} mins
-                </span>
-              </div>
-            );
-          })}
-        </div>
+    <AdminPageLayout title="Admin Dashboard">
+      {/* Top stats */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <StatCard label="Customers Waiting" value={totals.waiting} sub="Across all services" />
+        <StatCard label="Services" value={totals.activeServices} sub="Active services" />
+        <StatCard label="Estimated Total Wait" value={`${totals.avgWait} mins`} sub="Using avg service time" />
       </div>
-    </div>
+
+      {/* Services table */}
+      <SectionCard>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Service Overview</h2>
+          <p className="text-sm text-gray-500">
+            Avg service time: {AVG_SERVICE_TIME} min
+          </p>
+        </div>
+
+        <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
+          {/* Header */}
+          <div className="grid grid-cols-3 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700">
+            <span>Service</span>
+            <span className="text-center">In Queue</span>
+            <span className="text-right">Est. Waiting Time</span>
+          </div>
+
+          {/* Rows */}
+          <div className="divide-y divide-gray-100 bg-white">
+            {services.map((service) => {
+              const users = queueUsers[service.id] || [];
+              const waitingUsers = users.filter((u) => !u.served);
+
+              const totalInQueue = waitingUsers.length;
+              const totalWaitingTime = totalInQueue * AVG_SERVICE_TIME;
+
+              return (
+                <div
+                  key={service.id}
+                  className="grid grid-cols-3 items-center px-4 py-4 transition hover:bg-gray-50"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-gray-900">
+                      {service.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Service ID: {service.id}
+                    </p>
+                  </div>
+
+                  <div className="text-center">
+                    <span className="inline-flex items-center justify-center rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
+                      {totalInQueue}
+                    </span>
+                  </div>
+
+                  <p className="text-right text-sm text-gray-600">
+                    {totalWaitingTime} mins
+                  </p>
+                </div>
+              );
+            })}
+
+            {services.length === 0 && (
+              <div className="px-4 py-6 text-sm text-gray-500">
+                No services available.
+              </div>
+            )}
+          </div>
+        </div>
+      </SectionCard>
+    </AdminPageLayout>
   );
 };
 
