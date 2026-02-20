@@ -1,199 +1,156 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { users } from "../../data/mockUsers";
+import { useAuth } from "../../context/AuthContext";
+import bgImage from "../../assets/Barber 2.0.jpg";
 
-const Register: React.FC = () => {
-  const [name, setName] = useState("");
+const Login: React.FC = () => {
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage("");
 
-    if (password !== confirm) {
-      setIsError(true);
-      setMessage("Passwords do not match");
+    const user = users.find((u) => u.email === email && u.password === password);
+
+    if (!user) {
+      setError("Invalid credentials");
       return;
     }
 
-    setIsError(false);
-    setMessage("Registration successful (mock)");
+    login(user.email);
+    navigate("/otp");
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-[#2c1e17] via-[#3b2a21] to-[#1a120d]">
-      
-      <form
-        onSubmit={handleRegister}
-        className="w-full max-w-lg bg-white/90 backdrop-blur p-10 rounded-2xl shadow-2xl"
+  const eyeIcon = useMemo(
+    () => (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-5 w-5"
+        aria-hidden="true"
       >
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-4xl font-bold text-gray-900">Register</h2>
-          <p className="text-sm text-gray-600 mt-2">
-            Create your account to book appointments
-          </p>
-        </div>
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+    []
+  );
 
-        {/* Message */}
-        {message && (
-          <div
-            className={`mb-6 rounded-lg px-4 py-2 text-sm border ${
-              isError
-                ? "bg-red-50 text-red-700 border-red-200"
-                : "bg-green-50 text-green-700 border-green-200"
-            }`}
-          >
-            {message}
+  const eyeOffIcon = useMemo(
+    () => (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-5 w-5"
+        aria-hidden="true"
+      >
+        <path d="M10.58 10.58a2 2 0 0 0 2.83 2.83" />
+        <path d="M9.88 5.08A10.43 10.43 0 0 1 12 5c6.5 0 10 7 10 7a18.25 18.25 0 0 1-3.13 4.19" />
+        <path d="M6.61 6.61A18.09 18.09 0 0 0 2 12s3.5 7 10 7a10.3 10.3 0 0 0 4.41-.93" />
+        <path d="M2 2l20 20" />
+      </svg>
+    ),
+    []
+  );
+
+  return (
+    <div
+      className="relative flex min-h-screen items-center justify-center bg-cover bg-center bg-no-repeat px-4"
+      style={{ backgroundImage: `url(${bgImage})` }}
+    >
+      <div className="absolute inset-0 bg-black/45" />
+
+      <form
+        onSubmit={handleLogin}
+        className="relative w-full max-w-md rounded-2xl bg-white/90 backdrop-blur-md shadow-2xl ring-1 ring-black/5"
+      >
+        <div className="px-8 py-10">
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-semibold tracking-tight text-gray-900">
+              Barber Shop Login
+            </h2>
+            <p className="text-sm text-gray-600">Welcome back — please sign in</p>
           </div>
-        )}
 
-        <div className="space-y-5">
+          <div className="mt-8 space-y-6">
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </div>
+            )}
 
-          <input
-            type="text"
-            placeholder="Full Name"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Email</label>
+              <input
+                type="email"
+                placeholder="you@email.com"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
 
-          <input
-            type="email"
-            placeholder="Email Address"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Password</label>
 
-          <input
-            type="tel"
-            placeholder="Phone Number"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-          />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 pr-12 text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
 
-          {/* Password */}
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Create Password"
-              className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? eyeOffIcon : eyeIcon}
+                </button>
+              </div>
+            </div>
 
             <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800"
-              aria-label="Toggle password visibility"
+              type="submit"
+              className="w-full rounded-xl bg-blue-600 py-3.5 font-semibold text-white shadow-sm hover:bg-blue-700 active:scale-[0.99] transition"
             >
-              {showPassword ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M3 3l18 18" />
-                  <path d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42" />
-                  <path d="M9.88 5.08A10.94 10.94 0 0112 4c7 0 10 8 10 8a16.86 16.86 0 01-4.17 5.27" />
-                  <path d="M6.61 6.61A16.86 16.86 0 002 12s3 8 10 8a10.94 10.94 0 005.08-1.32" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              )}
+              Login
             </button>
-          </div>
 
-          {/* Confirm Password */}
-          <div className="relative">
-            <input
-              type={showConfirm ? "text" : "password"}
-              placeholder="Confirm Password"
-              className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-            />
-
-            <button
-              type="button"
-              onClick={() => setShowConfirm((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800"
-              aria-label="Toggle confirm password visibility"
-            >
-              {showConfirm ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M3 3l18 18" />
-                  <path d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-4.42" />
-                  <path d="M9.88 5.08A10.94 10.94 0 0112 4c7 0 10 8 10 8a16.86 16.86 0 01-4.17 5.27" />
-                  <path d="M6.61 6.61A16.86 16.86 0 002 12s3 8 10 8a10.94 10.94 0 005.08-1.32" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              )}
-            </button>
+            <p className="mt-4 text-center text-sm text-gray-700">
+              Don’t have an account?{" "}
+              <Link
+                to="/register"
+                className="font-semibold text-blue-600 hover:underline"
+              >
+                Register here
+              </Link>
+            </p>
           </div>
         </div>
-
-        <button
-          type="submit"
-          className="w-full mt-8 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition"
-        >
-          Register
-        </button>
-
-        <p className="text-center mt-6 text-sm text-gray-700">
-          Already have an account?{" "}
-          <Link to="/" className="text-blue-600 hover:underline font-medium">
-            Login here
-          </Link>
-        </p>
       </form>
     </div>
   );
 };
 
-export default Register;
+export default Login;
