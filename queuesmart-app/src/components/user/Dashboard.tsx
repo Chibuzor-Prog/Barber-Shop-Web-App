@@ -1,10 +1,23 @@
 import React, { useState } from "react";
-import { services } from "../../data/mockServices";
+// Helper to load services from localStorage
+function getServicesFromStorage() {
+  const data = localStorage.getItem("services");
+  return data ? JSON.parse(data) : [];
+}
 import Navbar from "../common/Navbar";
 
 const Dashboard: React.FC = () => {
   const [queueCount] = useState(2); // mock queue
   const [notifications] = useState(["Your haircut is almost ready!"]);
+  const [services, setServices] = useState<any[]>(getServicesFromStorage());
+
+  // Listen for changes to services in localStorage
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setServices(getServicesFromStorage());
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div>

@@ -10,6 +10,7 @@ export type QueueItem = {
   ticketNumber: number;
 };
 
+
 type QueueContextType = {
   queue: QueueItem[];
   ticketCounter: number;
@@ -21,6 +22,7 @@ type QueueContextType = {
   resetTickets: () => void;
   addNotification: (message: string) => void;
   removeNotification: (index: number) => void;
+  estimateWaitTime: (queueItemId: number) => number;
 };
 
 const QueueContext = createContext<QueueContextType | null>(null);
@@ -34,6 +36,27 @@ export const useQueue = () => {
 };
 
 export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // Wait-time estimation: position in queue × expected duration
+    /**
+     * Estimate wait time for a given user or queue item.
+     * @param queueItemId The id of the queue item (ticket)
+     * @returns Estimated wait time in minutes
+     */
+    const estimateWaitTime = (queueItemId: number): number => {
+      // Find the queue item
+      const item = queue.find((q: QueueItem) => q.id === queueItemId);
+      if (!item) return 0;
+      // Get all waiting items for this service, sorted by ticketNumber
+      const serviceQueue = queue
+        .filter((q: QueueItem) => q.service.id === item.service.id && q.status !== "served")
+        .sort((a: QueueItem, b: QueueItem) => a.ticketNumber - b.ticketNumber);
+      // Find position (0-based)
+      const position = serviceQueue.findIndex((q: QueueItem) => q.id === queueItemId);
+      // Use the expected duration from the service
+      const duration = item.service.duration || 10;
+      // Wait time is position × duration
+      return (position >= 0 ? position : 0) * duration;
+    };
   // Load queue from LocalStorage
   const [queue, setQueue] = useState<QueueItem[]>(() => {
     const saved = localStorage.getItem("queue");
@@ -117,21 +140,21 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Simulate queue progress every 15 seconds with functional update
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setQueue((prevQueue: QueueItem[]) => {
-        const updated: QueueItem[] = prevQueue.map(item => {
-          if (item.status === "waiting") return { ...item, status: "almost ready" };
-          if (item.status === "almost ready") return { ...item, status: "served" };
-          return item;
-        });
-        localStorage.setItem("queue", JSON.stringify(updated));
-        return updated;
-      });
-    }, 15000);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setQueue((prevQueue: QueueItem[]) => {
+  //       const updated: QueueItem[] = prevQueue.map(item => {
+  //         if (item.status === "waiting") return { ...item, status: "almost ready" };
+  //         if (item.status === "almost ready") return { ...item, status: "served" };
+  //         return item;
+  //       });
+  //       localStorage.setItem("queue", JSON.stringify(updated));
+  //       return updated;
+  //     });
+  //   }, 15000);
 
-    return () => clearInterval(interval);
-  }, []); // no dependencies needed with functional update
+  //   return () => clearInterval(interval);
+  // }, []); // no dependencies needed with functional update
 
   return (
     <QueueContext.Provider
@@ -145,7 +168,8 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         removeFromQueue,
         resetTickets,
         addNotification,
-        removeNotification
+        removeNotification,
+        estimateWaitTime
       }}
     >
       {children}

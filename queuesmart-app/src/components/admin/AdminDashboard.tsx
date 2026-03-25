@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { services } from "../../data/mockServices";
+
+// Helper to load services from localStorage
+function getServicesFromStorage() {
+  const data = localStorage.getItem("services");
+  return data ? JSON.parse(data) : [];
+}
 import AdminPageLayout from "./ui/AdminPageLayout";
 import SectionCard from "./ui/SectionCard";
 import StatCard from "./ui/StatCard";
@@ -15,28 +20,36 @@ type TicketUser = {
 const AVG_SERVICE_TIME = 10;
 
 const AdminDashboard: React.FC = () => {
-  const [queueUsers, setQueueUsers] = useState<Record<number, TicketUser[]>>(
-    () => {
-      const stored = localStorage.getItem("queueUsers");
-      return stored ? JSON.parse(stored) : {};
-    }
-  );
+  // Read the real user queue from localStorage
+  function getUserQueue() {
+    const data = localStorage.getItem("queue");
+    return data ? JSON.parse(data) : [];
+  }
 
-  // Sync whenever localStorage changes (from QueueManagement)
+  const [queue, setQueue] = useState<any[]>(getUserQueue());
+
+  // Poll for queue changes
   useEffect(() => {
     const interval = setInterval(() => {
-      const stored = localStorage.getItem("queueUsers");
-      if (stored) setQueueUsers(JSON.parse(stored));
-      else setQueueUsers({});
+      setQueue(getUserQueue());
     }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
+  // Services state (from localStorage)
+  const [services, setServices] = useState<any[]>(getServicesFromStorage());
+
+  // Listen for changes to services in localStorage
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setServices(getServicesFromStorage());
+    }, 500);
     return () => clearInterval(interval);
   }, []);
 
   const totals = useMemo(() => {
-    const allUsers = Object.values(queueUsers).flat();
-    const waiting = allUsers.filter((u) => !u.served).length;
-    const served = allUsers.filter((u) => u.served).length;
+    const waiting = queue.filter((q: any) => q.status !== "served").length;
+    const served = queue.filter((q: any) => q.status === "served").length;
 
     return {
       waiting,
@@ -44,7 +57,7 @@ const AdminDashboard: React.FC = () => {
       activeServices: services.length,
       avgWait: waiting * AVG_SERVICE_TIME,
     };
-  }, [queueUsers]);
+  }, [queue, services]);
 
   return (
     <AdminPageLayout title="Admin Dashboard">
@@ -74,12 +87,11 @@ const AdminDashboard: React.FC = () => {
 
           {/* Rows */}
           <div className="divide-y divide-gray-100 bg-white">
-            {services.map((service) => {
-              const users = queueUsers[service.id] || [];
-              const waitingUsers = users.filter((u) => !u.served);
-
+            {services.map((service: any) => {
+              const users = queue.filter((q: any) => q.service.id === service.id);
+              const waitingUsers = users.filter((u: any) => u.status !== "served");
               const totalInQueue = waitingUsers.length;
-              const totalWaitingTime = totalInQueue * AVG_SERVICE_TIME;
+              const totalWaitingTime = totalInQueue * (service.duration || AVG_SERVICE_TIME);
 
               return (
                 <div

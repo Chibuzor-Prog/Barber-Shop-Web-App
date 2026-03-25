@@ -4,7 +4,7 @@ import { useQueue, QueueItem } from "../../context/QueueContext";
 import { useAuth } from "../../context/AuthContext";
 
 const QueueStatus: React.FC = () => {
-  const { queue, cancelQueue } = useQueue();
+  const { queue, cancelQueue, estimateWaitTime } = useQueue();
   const { user } = useAuth();
 
   // Only show current logged-in user's queue
@@ -39,15 +39,21 @@ const QueueStatus: React.FC = () => {
               key={item.id}
               className="border p-4 mb-3 rounded flex justify-between items-center"
             >
+
               <div>
                 <p><strong>Ticket:</strong> #{item.ticketNumber}</p>
                 <p>Service: {item.service.name}</p>
                 <p>
-                  Status:{" "}
+                  Status: {" "}
                   <span className={getStatusColor(item.status)}>
                     {item.status}
                   </span>
                 </p>
+                {item.status !== "served" && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    Estimated wait: {estimateWaitTime(item.id)} mins
+                  </p>
+                )}
               </div>
 
               {/* Allow cancel if not served */}

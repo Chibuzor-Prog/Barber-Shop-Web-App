@@ -11,7 +11,18 @@ import {
 
 import AdminPageLayout from "./ui/AdminPageLayout";
 import SectionCard from "./ui/SectionCard";
-import { services } from "../../data/mockServices";
+
+// Helper to load services from localStorage
+function getServicesFromStorage() {
+  const data = localStorage.getItem("services");
+  return data ? JSON.parse(data) : [];
+}
+
+// Helper to load queue from localStorage
+function getQueueFromStorage() {
+  const data = localStorage.getItem("queue");
+  return data ? JSON.parse(data) : [];
+}
 
 type QueueLengths = Record<number, number>;
 
@@ -39,34 +50,27 @@ const generateUsers = (count: number): TicketUser[] =>
     served: false,
   }));
 
+
 const AnalyticsDashboard: React.FC = () => {
-  // Initialize users per service
-  const [queueUsers, setQueueUsers] = useState<Record<number, TicketUser[]>>(() => {
-    const raw = localStorage.getItem("queueUsers");
-    const storedUsers = raw ? JSON.parse(raw) : null;
+  const [services, setServices] = useState<any[]>(getServicesFromStorage());
+  const [queue, setQueue] = useState<any[]>(getQueueFromStorage());
 
-    if (storedUsers) return storedUsers;
-
-    return Object.fromEntries(
-      Object.entries(MOCK_QUEUE_LENGTHS).map(([id, count]) => [
-        Number(id),
-        generateUsers(Number(count)),
-      ])
-    ) as Record<number, TicketUser[]>;
-  });
-
-  // Persist to localStorage so it syncs with QueueManagement
+  // Listen for changes to services and queue in localStorage
   useEffect(() => {
-    localStorage.setItem("queueUsers", JSON.stringify(queueUsers));
-  }, [queueUsers]);
+    const interval = setInterval(() => {
+      setServices(getServicesFromStorage());
+      setQueue(getQueueFromStorage());
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   // Compute analytics data
-  const data = services.map((service) => {
-    const users = queueUsers[service.id] || [];
+  const data = services.map((service: any) => {
+    const users = queue.filter((q: any) => q.service.id === service.id);
     return {
       service: service.name,
-      waiting: users.filter((u) => !u.served).length,
-      served: users.filter((u) => u.served).length,
+      waiting: users.filter((u: any) => u.status !== "served").length,
+      served: users.filter((u: any) => u.status === "served").length,
     };
   });
 
@@ -105,10 +109,10 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
 
         <div className="divide-y divide-gray-100">
-          {services.map((service) => {
-            const users = queueUsers[service.id] || [];
-            const waiting = users.filter((u) => !u.served).length;
-            const served = users.filter((u) => u.served).length;
+          {services.map((service: any) => {
+            const users = queue.filter((q: any) => q.service.id === service.id);
+            const waiting = users.filter((u: any) => u.status !== "served").length;
+            const served = users.filter((u: any) => u.status === "served").length;
 
             return (
               <div

@@ -1,19 +1,17 @@
-import React, { createContext, useContext, useState } from "react";
 
-type AuthUser = {
-  email: string;
-  role: "user" | "admin";
-};
+import React, { createContext, useContext, useState } from "react";
+import { User, users as mockUsers } from "../data/mockUsers";
 
 type AuthContextType = {
-  user: AuthUser | null;
-  tempUser: AuthUser | null;
-  login: (email: string) => void;
+  user: User | null;
+  tempUser: User | null;
+  login: (user: User) => void;
   verifyOTP: () => void;
   logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -21,19 +19,18 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(() =>
-    JSON.parse(localStorage.getItem("authUser") || "null")
-  );
 
-  const [tempUser, setTempUser] = useState<AuthUser | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(() => {
+    const stored = localStorage.getItem("authUser");
+    return stored ? JSON.parse(stored) : null;
+  });
+
+  const [tempUser, setTempUser] = useState<User | null>(null);
 
   // Step 1: Called from Login
-  const login = (email: string) => {
-    const role: "admin" | "user" =
-      email === "admin@salon.com" ? "admin" : "user";
-
-    setTempUser({ email, role }); // Not saved yet
+  const login = (user: User) => {
+    setTempUser(user);
   };
 
   // Step 2: Called from OTP page

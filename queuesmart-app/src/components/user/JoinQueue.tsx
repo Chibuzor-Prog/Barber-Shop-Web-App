@@ -1,5 +1,9 @@
 import React, { useState } from "react";
-import { services } from "../../data/mockServices";
+// Helper to load services from localStorage
+function getServicesFromStorage() {
+  const data = localStorage.getItem("services");
+  return data ? JSON.parse(data) : [];
+}
 import { users } from "../../data/mockUsers";
 import Navbar from "../common/Navbar";
 import { useQueue, QueueItem } from "../../context/QueueContext";
@@ -7,6 +11,15 @@ import { useQueue, QueueItem } from "../../context/QueueContext";
 const JoinQueue: React.FC = () => {
   const { queue, joinQueue, cancelQueue } = useQueue();
   const [selectedService, setSelectedService] = useState<number | null>(null);
+  const [services, setServices] = useState<any[]>(getServicesFromStorage());
+
+  // Listen for changes to services in localStorage
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setServices(getServicesFromStorage());
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
   const [error, setError] = useState("");
 
   const mockUser = users[0]; // simulate logged-in user
@@ -73,10 +86,16 @@ const JoinQueue: React.FC = () => {
                 key={item.id}
                 className="flex justify-between items-center bg-blue-100 p-2 rounded"
               >
-                <span className="text-blue-700">
-                  Joined queue for {item.service.name} (Ticket #{item.ticketNumber})
-                </span>
-
+                <div>
+                  <span className="text-blue-700">
+                    Joined queue for {item.service.name} (Ticket #{item.ticketNumber})
+                  </span>
+                  {item.status !== "served" && (
+                    <span className="block text-xs text-gray-600 mt-1">
+                      Estimated wait: {typeof estimateWaitTime === 'function' ? estimateWaitTime(item.id) : 0} mins
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={() => cancelQueue(item.id)}
                   className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"

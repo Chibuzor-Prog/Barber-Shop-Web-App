@@ -22,7 +22,7 @@ const Login: React.FC = () => {
       return;
     }
 
-    login(user.email);
+    login(user);
     navigate("/otp");
   };
 
