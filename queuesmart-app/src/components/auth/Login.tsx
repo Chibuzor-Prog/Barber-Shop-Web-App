@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { users } from "../../data/mockUsers";
 import { useAuth } from "../../context/AuthContext";
 import bgImage from "../../assets/Barber 2.0.jpg";
 
@@ -12,20 +11,33 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    const user = users.find((u) => u.email === email && u.password === password);
+  try {
+    const response = await fetch("http://127.0.0.1:5001/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-    if (!user) {
-      setError("Invalid credentials");
+    const data = await response.json();
+
+    if (!response.ok) {
+      setError(data.message || "Invalid credentials");
       return;
     }
 
-    login(user);
+    login(data.user);
     navigate("/otp");
-  };
 
+  } catch (error) {
+    console.error(error);
+    setError("Cannot connect to server");
+  }
+};
   const eyeIcon = useMemo(
     () => (
       <svg
