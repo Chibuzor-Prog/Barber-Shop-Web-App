@@ -1,175 +1,218 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { Service } from "../data/mockServices";
-import { User } from "../data/mockUsers";
+// src/context/QueueContext.tsx
+//
+// Real-time strategy (two-layer):
+//   1. Backend polling  – every 3 s fetches /queue and /notifications/user/:id
+//   2. localStorage broadcast – after every mutating action, a "qs_sync" key is
+//      written with a timestamp. A "storage" event listener on OTHER tabs/pages
+//      picks this up immediately and re-fetches, giving near-instant cross-page
+//      reactivity without a WebSocket.
+//
+// ── CHANGED lines are annotated inline.
+
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
+import { queueApi, notificationsApi } from "../api/api";
+import { useAuth } from "./AuthContext";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export type QueueItem = {
   id: number;
-  user: User;
-  service: Service;
+  userId: number | string;
+  name: string;
+  serviceId: number;
+  serviceName: string;
   status: "waiting" | "almost ready" | "served";
   ticketNumber: number;
+  joinedAt: string;
+  estimatedWaitMinutes?: number;
 };
 
+export type BackendNotification = {
+  id: number;
+  userId: number | string;
+  message: string;
+  createdAt: string;
+};
 
 type QueueContextType = {
   queue: QueueItem[];
-  ticketCounter: number;
-  notifications: string[];
-  joinQueue: (user: User, service: Service) => void;
-  serveNext: (serviceId: number) => void;
-  removeFromQueue: (id: number) => void;
-  cancelQueue: (id: number) => void;
-  resetTickets: () => void;
-  addNotification: (message: string) => void;
-  removeNotification: (index: number) => void;
-  estimateWaitTime: (queueItemId: number) => number;
+  notifications: BackendNotification[];
+  refreshQueue: () => Promise<void>;
+  joinQueue: (serviceId: number) => Promise<void>;
+  cancelQueue: (entryId: number) => Promise<void>;
+  serveNext: (serviceId: number) => Promise<void>;
+  removeFromQueue: (entryId: number) => Promise<void>;
+  resetQueue: () => Promise<void>;
+  dismissNotification: (notifId: number) => Promise<void>;
+  estimateWaitTime: (entryId: number) => number;
 };
+
+// ── Context ───────────────────────────────────────────────────────────────────
 
 const QueueContext = createContext<QueueContextType | null>(null);
 
 export const useQueue = () => {
-  const context = useContext(QueueContext);
-  if (!context) throw new Error(
-    "QueueContext missing, useQueue must be used within a QueueProvider"
-  );
-  return context;
+  const ctx = useContext(QueueContext);
+  if (!ctx) throw new Error("QueueContext missing – wrap with QueueProvider");
+  return ctx;
 };
 
-export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // Wait-time estimation: position in queue × expected duration
-    /**
-     * Estimate wait time for a given user or queue item.
-     * @param queueItemId The id of the queue item (ticket)
-     * @returns Estimated wait time in minutes
-     */
-    const estimateWaitTime = (queueItemId: number): number => {
-      // Find the queue item
-      const item = queue.find((q: QueueItem) => q.id === queueItemId);
-      if (!item) return 0;
-      // Get all waiting items for this service, sorted by ticketNumber
-      const serviceQueue = queue
-        .filter((q: QueueItem) => q.service.id === item.service.id && q.status !== "served")
-        .sort((a: QueueItem, b: QueueItem) => a.ticketNumber - b.ticketNumber);
-      // Find position (0-based)
-      const position = serviceQueue.findIndex((q: QueueItem) => q.id === queueItemId);
-      // Use the expected duration from the service
-      const duration = item.service.duration || 10;
-      // Wait time is position × duration
-      return (position >= 0 ? position : 0) * duration;
-    };
-  // Load queue from LocalStorage
+// ── localStorage broadcast helper ─────────────────────────────────────────────
+// Writing a unique timestamp to "qs_sync" fires the "storage" event in ALL
+// OTHER tabs/pages sharing the same origin, triggering an immediate refresh.
+// ── CHANGED: added broadcast mechanism
+const SYNC_KEY = "qs_sync";
+function broadcastSync() {
+  localStorage.setItem(SYNC_KEY, Date.now().toString());
+}
+
+// ── Provider ──────────────────────────────────────────────────────────────────
+
+export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { user } = useAuth();
+
+  // ── CHANGED: queue and notifications come exclusively from backend
   const [queue, setQueue] = useState<QueueItem[]>(() => {
-    const saved = localStorage.getItem("queue");
-    return saved ? JSON.parse(saved) : [];
+    // ── CHANGED: seed initial state from localStorage cache so UI is not blank
+    //    on first render before the first fetch completes
+    try {
+      const cached = localStorage.getItem("qs_queue_cache");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
   });
 
-  const [ticketCounter, setTicketCounter] = useState(() => {
-    const savedCounter = localStorage.getItem("ticketCounter");
-    return savedCounter ? Number(savedCounter) : 1;
-  });
+  const [notifications, setNotifications] = useState<BackendNotification[]>([]);
 
-  const [notifications, setNotifications] = useState<string[]>([]);
+  // Track whether a fetch is in flight to avoid stacking parallel calls
+  const fetchingRef = useRef(false);
 
-  // Helper to update queue + persist
-  const saveQueue = (newQueue: QueueItem[]) => {
-    setQueue(newQueue);
-    localStorage.setItem("queue", JSON.stringify(newQueue));
-  };
+  // ── CHANGED: fetch full queue from backend, cache in localStorage for instant
+  //    re-render when another page reads the cache on mount
+  const refreshQueue = useCallback(async () => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+    try {
+      const data = await queueApi.getAll();
+      setQueue(data);
+      // ── CHANGED: write to localStorage cache so other pages can bootstrap fast
+      localStorage.setItem("qs_queue_cache", JSON.stringify(data));
+    } catch {
+      // backend may not be running; keep existing state
+    } finally {
+      fetchingRef.current = false;
+    }
+  }, []);
 
-  // Helper to update ticketCounter + persist
-  const saveTicketCounter = (newCounter: number) => {
-    setTicketCounter(newCounter);
-    localStorage.setItem("ticketCounter", newCounter.toString());
-  };
+  // ── CHANGED: fetch notifications from backend for the logged-in user
+  const refreshNotifications = useCallback(async () => {
+    if (!user) return;
+    try {
+      const data = await notificationsApi.getForUser(user.id);
+      setNotifications(data);
+    } catch {
+      // silently fail
+    }
+  }, [user]);
 
-  const addNotification = (message: string) => {
-    setNotifications(prev => [message, ...prev]);
-  };
+  // ── CHANGED: combined refresh called after every mutation and by the poll
+  const refresh = useCallback(async () => {
+    await Promise.all([refreshQueue(), refreshNotifications()]);
+  }, [refreshQueue, refreshNotifications]);
 
-  const removeNotification = (index: number) => {
-    setNotifications(prev => prev.filter((_, i) => i !== index));
-  };
+  // ── CHANGED: 3-second polling loop — keeps every open page in sync even
+  //    without the localStorage event (e.g. same-tab navigation)
+  useEffect(() => {
+    refresh();
+    const id = setInterval(refresh, 3000);
+    return () => clearInterval(id);
+  }, [refresh]);
 
-  const joinQueue = (user: User, service: Service) => {
-    const newItem: QueueItem = {
-      id: Date.now(),
-      user,
-      service,
-      status: "waiting",
-      ticketNumber: ticketCounter,
+  // ── CHANGED: listen for localStorage "storage" events triggered by OTHER
+  //    tabs/pages that call broadcastSync() after a mutation. This provides
+  //    near-instant cross-page reactivity without waiting for the next poll tick.
+  useEffect(() => {
+    const handleStorageEvent = (e: StorageEvent) => {
+      if (e.key === SYNC_KEY) {
+        refresh();
+      }
     };
-    saveQueue([...queue, newItem]);
-    saveTicketCounter(ticketCounter + 1);
-    addNotification(`${user.name} joined ${service.name}`);
+    window.addEventListener("storage", handleStorageEvent);
+    return () => window.removeEventListener("storage", handleStorageEvent);
+  }, [refresh]);
+
+  // ── CHANGED: joinQueue is async, calls backend, then broadcasts sync signal
+  const joinQueue = async (serviceId: number) => {
+    if (!user) throw new Error("Must be logged in to join a queue");
+    await queueApi.join(user.id, user.name, serviceId);
+    await refresh();
+    broadcastSync(); // ── CHANGED: notify other pages immediately
   };
 
-  const cancelQueue = (id: number) => {
-  setQueue((prevQueue: QueueItem[]) => {
-    const updated: QueueItem[] = prevQueue.filter(
-      (item) => item.id !== id
-    );
-
-    localStorage.setItem("queue", JSON.stringify(updated));
-    return updated;
-  });
-
-  addNotification("Service cancelled");
-};
-
-  const serveNext = (serviceId: number) => {
-    const index = queue.findIndex(
-      q => q.service.id === serviceId && q.status === "waiting"
-    );
-    if (index === -1) return;
-
-    const updatedQueue = [...queue];
-    updatedQueue[index].status = "served";
-    saveQueue(updatedQueue);
-    addNotification(`Ticket #${updatedQueue[index].ticketNumber} served`);
+  // ── CHANGED: cancelQueue calls backend, then broadcasts
+  const cancelQueue = async (entryId: number) => {
+    await queueApi.leaveByEntry(entryId);
+    await refresh();
+    broadcastSync();
   };
 
-  const removeFromQueue = (id: number) => {
-    const updatedQueue = queue.filter(q => q.id !== id);
-    saveQueue(updatedQueue);
-    addNotification("User removed from queue");
+  // ── CHANGED: serveNext calls backend, then broadcasts
+  const serveNext = async (serviceId: number) => {
+    await queueApi.serveNext(serviceId);
+    await refresh();
+    broadcastSync();
   };
 
-  const resetTickets = () => {
-    saveTicketCounter(1);
-    addNotification("Daily ticket counter reset");
+  // ── CHANGED: removeFromQueue calls backend, then broadcasts
+  const removeFromQueue = async (entryId: number) => {
+    await queueApi.remove(entryId);
+    await refresh();
+    broadcastSync();
   };
 
-  // Simulate queue progress every 15 seconds with functional update
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setQueue((prevQueue: QueueItem[]) => {
-  //       const updated: QueueItem[] = prevQueue.map(item => {
-  //         if (item.status === "waiting") return { ...item, status: "almost ready" };
-  //         if (item.status === "almost ready") return { ...item, status: "served" };
-  //         return item;
-  //       });
-  //       localStorage.setItem("queue", JSON.stringify(updated));
-  //       return updated;
-  //     });
-  //   }, 15000);
+  // ── CHANGED: resetQueue calls backend, then broadcasts
+  const resetQueue = async () => {
+    await queueApi.reset();
+    await refresh();
+    broadcastSync();
+  };
 
-  //   return () => clearInterval(interval);
-  // }, []); // no dependencies needed with functional update
+  // ── CHANGED: dismiss calls backend DELETE, removes locally, then broadcasts
+  const dismissNotification = async (notifId: number) => {
+    await notificationsApi.dismiss(notifId);
+    setNotifications((prev) => prev.filter((n) => n.id !== notifId));
+    broadcastSync();
+  };
+
+  // Derive wait time from the stored estimatedWaitMinutes on each queue entry
+  const estimateWaitTime = (entryId: number): number => {
+    const entry = queue.find((q) => q.id === entryId);
+    return entry?.estimatedWaitMinutes ?? 0;
+  };
 
   return (
     <QueueContext.Provider
       value={{
         queue,
-        ticketCounter,
         notifications,
+        refreshQueue,
         joinQueue,
         cancelQueue,
         serveNext,
         removeFromQueue,
-        resetTickets,
-        addNotification,
-        removeNotification,
-        estimateWaitTime
+        resetQueue,
+        dismissNotification,
+        estimateWaitTime,
       }}
     >
       {children}

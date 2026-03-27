@@ -1,80 +1,105 @@
-import React, { useMemo } from "react";
+// src/user/History.tsx
+// ── CHANGED: history fetched from backend on mount AND re-fetched whenever
+//    a "storage" event fires (meaning another page triggered a queue action).
+//    No hardcoded mock history array.
+
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { historyApi } from "../../api/api";
 import UserPageLayout from "./ui/UserPageLayout";
 import SectionCard from "../admin/ui/SectionCard";
 import StatCard from "../admin/ui/StatCard";
 
+type HistoryEntry = {
+  id: number;
+  userId: number | string;
+  userName: string;
+  serviceId: number;
+  serviceName: string;
+  outcome: "Served" | "Cancelled";
+  date: string;
+};
+
+const SYNC_KEY = "qs_sync";
+
 const History: React.FC = () => {
-  const history = [
-    { date: "2026-02-10", service: "Haircut & Beard", outcome: "Served" },
-    { date: "2026-02-09", service: "Shampoo", outcome: "Cancelled" },
-  ];
+  const { user } = useAuth();
+  // ── CHANGED: history state loaded from backend
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
-  // 📊 Stats
-  const stats = useMemo(() => {
-    const served = history.filter((h) => h.outcome === "Served").length;
-    const cancelled = history.filter((h) => h.outcome === "Cancelled").length;
+  // ── CHANGED: fetch wrapped in useCallback so it can be called from both
+  //    the useEffect mount and the storage event listener
+  const fetchHistory = useCallback(async () => {
+    if (!user) return;
+    try {
+      const data = await historyApi.getForUser(user.id);
+      setHistory(data);
+    } catch {
+      setHistory([]);
+    }
+  }, [user]);
 
-    return {
-      total: history.length,
-      served,
-      cancelled,
+  // ── CHANGED: initial fetch on mount
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
+  // ── CHANGED: listen for storage events from other pages — when a user
+  //    joins/leaves/is-served on any page, this page refreshes instantly
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === SYNC_KEY) fetchHistory();
     };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, [fetchHistory]);
+
+  // ── CHANGED: also poll every 5 s for same-tab navigation scenarios
+  useEffect(() => {
+    const id = setInterval(fetchHistory, 5000);
+    return () => clearInterval(id);
+  }, [fetchHistory]);
+
+  // ── CHANGED: stats derived from live backend history
+  const stats = useMemo(() => {
+    const served    = history.filter((h) => h.outcome === "Served").length;
+    const cancelled = history.filter((h) => h.outcome === "Cancelled").length;
+    return { total: history.length, served, cancelled };
   }, [history]);
 
   return (
     <UserPageLayout title="History">
       <div className="p-6 space-y-6">
-        {/* 🔹 Top Stats */}
+        {/* Top Stats */}
         <div className="grid gap-6 md:grid-cols-3">
-          <StatCard
-            label="Total Visits"
-            value={stats.total}
-            sub="All history records"
-          />
-          <StatCard
-            label="Served"
-            value={stats.served}
-            sub="Completed services"
-          />
-          <StatCard
-            label="Cancelled"
-            value={stats.cancelled}
-            sub="Missed or cancelled"
-          />
+          <StatCard label="Total Visits" value={stats.total}     sub="All history records"  />
+          <StatCard label="Served"       value={stats.served}    sub="Completed services"   />
+          <StatCard label="Cancelled"    value={stats.cancelled} sub="Missed or cancelled"  />
         </div>
 
-        {/* 🔹 History Table */}
+        {/* History Table */}
         <SectionCard>
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Service History
-            </h2>
-            <p className="text-sm text-gray-500">
-              Your past queue activity
-            </p>
+            <h2 className="text-lg font-semibold text-gray-900">Service History</h2>
+            <p className="text-sm text-gray-500">Your past queue activity</p>
           </div>
 
           <div className="mt-4 border rounded-xl overflow-hidden">
-            {/* Header */}
             <div className="grid grid-cols-3 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700">
               <span>Date</span>
               <span>Service</span>
               <span className="text-right">Outcome</span>
             </div>
 
-            {/* Rows */}
             <div className="divide-y bg-white">
-              {history.map((h, i) => (
+              {/* ── CHANGED: rows from backend history, using serviceName field */}
+              {history.map((h) => (
                 <div
-                  key={i}
+                  key={h.id}
                   className="grid grid-cols-3 items-center px-4 py-4 hover:bg-gray-50"
                 >
                   <p className="text-sm text-gray-600">{h.date}</p>
-
-                  <p className="font-medium text-gray-900">
-                    {h.service}
-                  </p>
-
+                  <p className="font-medium text-gray-900">{h.serviceName}</p>
                   <div className="text-right">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-semibold ${
@@ -90,9 +115,7 @@ const History: React.FC = () => {
               ))}
 
               {history.length === 0 && (
-                <div className="px-4 py-6 text-sm text-gray-500">
-                  No history available.
-                </div>
+                <div className="px-4 py-6 text-sm text-gray-500">No history available.</div>
               )}
             </div>
           </div>

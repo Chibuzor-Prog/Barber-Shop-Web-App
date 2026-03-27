@@ -1,18 +1,27 @@
+// src/auth/Register.tsx
+// ── CHANGED: handleRegister is now async and calls authApi.register()
+//    which hits the backend /auth/register endpoint.
+//    Removed mock "Registration successful (mock)" alert-style message.
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { authApi } from "../../api/api";
 
 const Register: React.FC = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  const [name, setName]               = useState("");
+  const [email, setEmail]             = useState("");
+  const [phone, setPhone]             = useState("");
+  const [password, setPassword]       = useState("");
+  const [confirm, setConfirm]         = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
+  const [showConfirm, setShowConfirm]   = useState(false);
+  const [message, setMessage]         = useState("");
+  const [isError, setIsError]         = useState(false);
+  // ── CHANGED: loading state for async backend call
+  const [loading, setLoading]         = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  // ── CHANGED: handleRegister is async and calls backend /auth/register
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
 
@@ -22,8 +31,21 @@ const Register: React.FC = () => {
       return;
     }
 
-    setIsError(false);
-    setMessage("Registration successful (mock)");
+    setLoading(true);
+    try {
+      // ── CHANGED: call backend instead of mock alert
+      const result = await authApi.register(name, email, password);
+      setIsError(false);
+      setMessage(`Registration successful! Welcome, ${result.user.name}. You can now log in.`);
+      // Reset form on success
+      setName(""); setEmail(""); setPhone(""); setPassword(""); setConfirm("");
+    } catch (err: any) {
+      setIsError(true);
+      // Backend returns 400 with { message: 'User already exists' } etc.
+      setMessage(err.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -129,11 +151,13 @@ const Register: React.FC = () => {
         </div>
 
         <div className="mt-10">
+          {/* ── CHANGED: button shows loading state during backend call */}
           <button
             type="submit"
-            className="w-full rounded-xl bg-blue-600 py-3.5 font-semibold text-white shadow-sm hover:bg-blue-700 active:scale-[0.99] transition"
+            disabled={loading}
+            className="w-full rounded-xl bg-blue-600 py-3.5 font-semibold text-white shadow-sm hover:bg-blue-700 active:scale-[0.99] transition disabled:opacity-60"
           >
-            Register
+            {loading ? "Registering…" : "Register"}
           </button>
 
           <p className="mt-4 text-center text-sm text-gray-700">

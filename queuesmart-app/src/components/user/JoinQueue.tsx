@@ -1,7 +1,13 @@
+// src/user/JoinQueue.tsx
+// ── CHANGED: services and queue from backend. joinQueue / cancelQueue call
+//    backend via QueueContext which also broadcasts localStorage sync so all
+//    other open pages (Dashboard, QueueStatus, AdminDashboard…) update instantly.
+//    mockUsers and mockServices imports removed entirely.
+
 import React, { useState, useMemo } from "react";
-import { services } from "../../data/mockServices";
-import { users } from "../../data/mockUsers";
 import { useQueue, QueueItem } from "../../context/QueueContext";
+import { useAuth } from "../../context/AuthContext";
+import { useServices } from "../../hooks/useServices";
 import UserPageLayout from "./ui/UserPageLayout";
 import SectionCard from "../admin/ui/SectionCard";
 import StatCard from "../admin/ui/StatCard";
@@ -10,66 +16,58 @@ const AVG_SERVICE_TIME = 10;
 
 const JoinQueue: React.FC = () => {
   const { queue, joinQueue, cancelQueue } = useQueue();
+  // ── CHANGED: authenticated user from context, not hardcoded mockUser
+  const { user } = useAuth();
+  // ── CHANGED: services from backend via shared hook
+  const { services } = useServices();
+
   const [selectedService, setSelectedService] = useState<number | null>(null);
   const [error, setError] = useState("");
 
-  const mockUser = users[0];
-
-  // User-specific queue
+  // ── CHANGED: filter queue by authenticated user's id
   const userQueue = useMemo(
-    () =>
-      queue.filter((item) => item.user.email === mockUser.email),
-    [queue]
+    () => queue.filter((item) => String(item.userId) === String(user?.id)),
+    [queue, user]
   );
 
-  // Stats
   const totalQueues = userQueue.length;
 
+  // ── CHANGED: use estimatedWaitMinutes from backend when available
   const totalWait = userQueue.reduce((acc, item, index) => {
-    return acc + (index + 1) * AVG_SERVICE_TIME;
+    return acc + (item.estimatedWaitMinutes ?? (index + 1) * AVG_SERVICE_TIME);
   }, 0);
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     if (!selectedService) {
       setError("Select a service");
       return;
     }
-
-    const service = services.find((s) => s.id === selectedService);
-    if (!service) return;
-
-    joinQueue(mockUser, service);
-    setSelectedService(null);
-    setError("");
+    try {
+      // ── CHANGED: joinQueue is async and calls backend; it also broadcasts
+      //    localStorage sync so Dashboard / QueueStatus update immediately
+      await joinQueue(selectedService);
+      setSelectedService(null);
+      setError("");
+    } catch (e: any) {
+      setError(e.message || "Failed to join queue");
+    }
   };
 
   return (
     <UserPageLayout title="Join Queue">
       <div className="p-6 space-y-6">
-        {/* 🔹 Top Stats */}
+        {/* Top Stats */}
         <div className="grid gap-6 md:grid-cols-3">
-          <StatCard
-            label="Queues Joined"
-            value={totalQueues}
-            sub="Your active queues"
-          />
-          <StatCard
-            label="Estimated Wait"
-            value={`${totalWait} mins`}
-            sub="Across all queues"
-          />
-          <StatCard
-            label="Services"
-            value={services.length}
-            sub="Available services"
-          />
+          {/* ── CHANGED: values from live backend-derived state */}
+          <StatCard label="Queues Joined"  value={totalQueues}           sub="Your active queues"  />
+          <StatCard label="Estimated Wait" value={`${totalWait} mins`}   sub="Across all queues"   />
+          {/* ── CHANGED: services.length from backend */}
+          <StatCard label="Services"       value={services.length}       sub="Available services"  />
         </div>
 
-        {/* 🔹 Join Queue Section */}
+        {/* Join Queue Section */}
         <SectionCard>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Join a Service Queue
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Join a Service Queue</h2>
 
           <div className="flex items-center gap-3">
             <select
@@ -81,6 +79,7 @@ const JoinQueue: React.FC = () => {
               }}
             >
               <option value="">Select a Service</option>
+              {/* ── CHANGED: options sourced from backend */}
               {services.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -96,24 +95,17 @@ const JoinQueue: React.FC = () => {
             </button>
           </div>
 
-          {error && (
-            <p className="text-red-500 mt-2 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
         </SectionCard>
 
-        {/* 🔹 Your Queue Table */}
+        {/* Your Queue Table */}
         <SectionCard>
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Your Queues
-            </h2>
-            <p className="text-sm text-gray-500">
-              Avg service time: {AVG_SERVICE_TIME} min
-            </p>
+            <h2 className="text-lg font-semibold text-gray-900">Your Queues</h2>
+            <p className="text-sm text-gray-500">Avg service time: {AVG_SERVICE_TIME} min</p>
           </div>
 
           <div className="mt-4 border rounded-xl overflow-hidden">
-            {/* Header */}
             <div className="grid grid-cols-4 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700">
               <span>Service</span>
               <span className="text-center">Ticket</span>
@@ -121,10 +113,10 @@ const JoinQueue: React.FC = () => {
               <span className="text-right">Action</span>
             </div>
 
-            {/* Rows */}
             <div className="divide-y bg-white">
+              {/* ── CHANGED: rows from backend-polled queue */}
               {userQueue.map((item: QueueItem, index: number) => {
-                const waitTime = (index + 1) * AVG_SERVICE_TIME;
+                const waitTime = item.estimatedWaitMinutes ?? (index + 1) * AVG_SERVICE_TIME;
 
                 return (
                   <div
@@ -132,12 +124,9 @@ const JoinQueue: React.FC = () => {
                     className="grid grid-cols-4 items-center px-4 py-4 hover:bg-gray-50"
                   >
                     <div>
-                      <p className="font-medium text-gray-900">
-                        {item.service.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Service ID: {item.service.id}
-                      </p>
+                      {/* ── CHANGED: item.serviceName (backend field) not item.service.name */}
+                      <p className="font-medium text-gray-900">{item.serviceName}</p>
+                      <p className="text-xs text-gray-500">Service ID: {item.serviceId}</p>
                     </div>
 
                     <div className="text-center">
@@ -146,11 +135,10 @@ const JoinQueue: React.FC = () => {
                       </span>
                     </div>
 
-                    <p className="text-right text-sm text-gray-600">
-                      {waitTime} mins
-                    </p>
+                    <p className="text-right text-sm text-gray-600">{waitTime} mins</p>
 
                     <div className="text-right">
+                      {/* ── CHANGED: cancelQueue passes item.id (backend entry id), triggers broadcast */}
                       <button
                         onClick={() => cancelQueue(item.id)}
                         className="text-red-600 text-sm font-medium hover:underline"

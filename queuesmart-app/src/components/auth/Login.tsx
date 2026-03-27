@@ -1,3 +1,8 @@
+// src/auth/Login.tsx
+// ── CHANGED: handleLogin is now async and calls authContext.login(email, password)
+//    which itself calls the backend /auth/login endpoint.
+//    Removed mockUsers import entirely.
+
 import React, { useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -8,36 +13,29 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  // ── CHANGED: loading state for async backend call
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
-const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
+  // ── CHANGED: handleLogin is async; calls backend via context.login()
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    const response = await fetch("http://127.0.0.1:5001/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setError(data.message || "Invalid credentials");
-      return;
+    try {
+      // ── CHANGED: login(email, password) — no longer searching mockUsers locally
+      await login(email, password);
+      navigate("/otp");
+    } catch (err: any) {
+      // Backend returns 401 with { message: 'Invalid credentials' }
+      setError(err.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    login(data.user);
-    navigate("/otp");
-
-  } catch (error) {
-    console.error(error);
-    setError("Cannot connect to server");
-  }
-};
   const eyeIcon = useMemo(
     () => (
       <svg
@@ -142,15 +140,17 @@ const handleLogin = async (e: React.FormEvent) => {
               </div>
             </div>
 
+            {/* ── CHANGED: button shows loading state during backend call */}
             <button
               type="submit"
-              className="w-full rounded-xl bg-blue-600 py-3.5 font-semibold text-white shadow-sm hover:bg-blue-700 active:scale-[0.99] transition"
+              disabled={loading}
+              className="w-full rounded-xl bg-blue-600 py-3.5 font-semibold text-white shadow-sm hover:bg-blue-700 active:scale-[0.99] transition disabled:opacity-60"
             >
-              Login
+              {loading ? "Signing in…" : "Login"}
             </button>
 
             <p className="mt-4 text-center text-sm text-gray-700">
-              Don’t have an account?{" "}
+              Don't have an account?{" "}
               <Link
                 to="/register"
                 className="font-semibold text-blue-600 hover:underline"

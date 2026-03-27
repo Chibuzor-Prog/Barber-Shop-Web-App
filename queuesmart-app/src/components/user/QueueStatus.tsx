@@ -1,3 +1,8 @@
+// src/user/QueueStatus.tsx
+// ── CHANGED: queue from backend-polled QueueContext. cancelQueue calls backend
+//    and triggers localStorage broadcast so all other pages update instantly.
+//    No localStorage manual sync, no mock data.
+
 import React, { useMemo } from "react";
 import { useQueue, QueueItem } from "../../context/QueueContext";
 import { useAuth } from "../../context/AuthContext";
@@ -11,81 +16,50 @@ const QueueStatus: React.FC = () => {
   const { queue, cancelQueue } = useQueue();
   const { user } = useAuth();
 
-  // Filter current user's queue
+  // ── CHANGED: filter from backend queue by authenticated user id
   const userQueue = queue.filter(
-    (item: QueueItem) => item.user.email === user?.email
+    (item: QueueItem) => String(item.userId) === String(user?.id)
   );
 
-  // 📊 Stats
+  // ── CHANGED: stats derived from live backend queue
   const stats = useMemo(() => {
-    const active = userQueue.filter((q) => q.status !== "served").length;
-    const served = userQueue.filter((q) => q.status === "served").length;
-
-    const totalWait = userQueue.reduce((acc, _, index) => {
-      return acc + (index + 1) * AVG_SERVICE_TIME;
+    const active   = userQueue.filter((q) => q.status !== "served").length;
+    const served   = userQueue.filter((q) => q.status === "served").length;
+    // ── CHANGED: prefer estimatedWaitMinutes from backend when available
+    const totalWait = userQueue.reduce((acc, item, index) => {
+      return acc + (item.estimatedWaitMinutes ?? (index + 1) * AVG_SERVICE_TIME);
     }, 0);
-
-    return {
-      total: userQueue.length,
-      active,
-      served,
-      totalWait,
-    };
+    return { total: userQueue.length, active, served, totalWait };
   }, [userQueue]);
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case "waiting":
-        return "bg-yellow-50 text-yellow-700";
-      case "almost ready":
-        return "bg-blue-50 text-blue-700";
-      case "served":
-        return "bg-green-50 text-green-700";
-      default:
-        return "bg-gray-50 text-gray-700";
+      case "waiting":      return "bg-yellow-50 text-yellow-700";
+      case "almost ready": return "bg-blue-50 text-blue-700";
+      case "served":       return "bg-green-50 text-green-700";
+      default:             return "bg-gray-50 text-gray-700";
     }
   };
 
   return (
     <UserPageLayout title="Queue Status">
       <div className="p-6 space-y-6">
-        {/* 🔹 Top Stats */}
+        {/* Top Stats */}
         <div className="grid gap-6 md:grid-cols-4">
-          <StatCard
-            label="Total Queues"
-            value={stats.total}
-            sub="All joined queues"
-          />
-          <StatCard
-            label="Active"
-            value={stats.active}
-            sub="Currently waiting"
-          />
-          <StatCard
-            label="Served"
-            value={stats.served}
-            sub="Completed"
-          />
-          <StatCard
-            label="Est. Wait"
-            value={`${stats.totalWait} mins`}
-            sub="Total wait time"
-          />
+          <StatCard label="Total Queues" value={stats.total}              sub="All joined queues"  />
+          <StatCard label="Active"       value={stats.active}             sub="Currently waiting"  />
+          <StatCard label="Served"       value={stats.served}             sub="Completed"          />
+          <StatCard label="Est. Wait"    value={`${stats.totalWait} mins`} sub="Total wait time"   />
         </div>
 
-        {/* 🔹 Queue Table */}
+        {/* Queue Table */}
         <SectionCard>
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Live Queue Status
-            </h2>
-            <p className="text-sm text-gray-500">
-              Avg service time: {AVG_SERVICE_TIME} min
-            </p>
+            <h2 className="text-lg font-semibold text-gray-900">Live Queue Status</h2>
+            <p className="text-sm text-gray-500">Avg service time: {AVG_SERVICE_TIME} min</p>
           </div>
 
           <div className="mt-4 border rounded-xl overflow-hidden">
-            {/* Header */}
             <div className="grid grid-cols-4 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700">
               <span>Service</span>
               <span className="text-center">Ticket</span>
@@ -93,20 +67,17 @@ const QueueStatus: React.FC = () => {
               <span className="text-right">Action</span>
             </div>
 
-            {/* Rows */}
             <div className="divide-y bg-white">
+              {/* ── CHANGED: rows from backend-polled queue */}
               {userQueue.map((item: QueueItem) => (
                 <div
                   key={item.id}
                   className="grid grid-cols-4 items-center px-4 py-4 hover:bg-gray-50"
                 >
                   <div>
-                    <p className="font-medium text-gray-900">
-                      {item.service.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Service ID: {item.service.id}
-                    </p>
+                    {/* ── CHANGED: item.serviceName (backend field) */}
+                    <p className="font-medium text-gray-900">{item.serviceName}</p>
+                    <p className="text-xs text-gray-500">Service ID: {item.serviceId}</p>
                   </div>
 
                   <div className="text-center">
@@ -116,17 +87,14 @@ const QueueStatus: React.FC = () => {
                   </div>
 
                   <div className="text-center">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusStyle(
-                        item.status
-                      )}`}
-                    >
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusStyle(item.status)}`}>
                       {item.status}
                     </span>
                   </div>
 
                   <div className="text-right">
                     {item.status !== "served" && (
+                      // ── CHANGED: cancelQueue async backend call + broadcast
                       <button
                         onClick={() => cancelQueue(item.id)}
                         className="text-red-600 text-sm font-medium hover:underline"
@@ -139,9 +107,7 @@ const QueueStatus: React.FC = () => {
               ))}
 
               {userQueue.length === 0 && (
-                <div className="px-4 py-6 text-sm text-gray-500">
-                  No active queues.
-                </div>
+                <div className="px-4 py-6 text-sm text-gray-500">No active queues.</div>
               )}
             </div>
           </div>

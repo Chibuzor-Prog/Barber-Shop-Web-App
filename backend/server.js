@@ -1,34 +1,52 @@
-const queueRoutes = require('./routes/queueRoutes');
-const express = require('express');
-const cors = require('cors');
-const authRoutes = require('./routes/authRoutes');
+// backend/server.js
+const express           = require('express');
+const cors              = require('cors');
+const authRoutes        = require('./routes/authRoutes');
+const queueRoutes       = require('./routes/queueRoutes');
+const serviceRoutes     = require('./routes/serviceRoutes');
+const historyRoutes     = require('./routes/historyRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const store             = require('./data/store');
 
-const app = express();
+const app  = express();
 const PORT = 5001;
 
 app.use(cors());
 app.use(express.json());
 
-app.use('/auth', authRoutes);
-app.use('/queue', queueRoutes);
+// ── Routes ────────────────────────────────────────────────────────────────────
+app.use('/auth',          authRoutes);
+app.use('/queue',         queueRoutes);
+app.use('/services',      serviceRoutes);
+app.use('/history',       historyRoutes);
+app.use('/notifications', notificationRoutes);
+
+// ── Test-only reset endpoint ──────────────────────────────────────────────────
+// POST /test/reset  — resets all in-memory state to seed data.
+// Only active when NODE_ENV !== 'production'.
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/test/reset', (req, res) => {
+    store.reset();
+    res.json({ message: 'Store reset' });
+  });
+}
 
 app.get('/', (req, res) => {
-  res.send('Backend is running\n');
+  res.send('QueueSmart Backend is running\n');
 });
 
-const server = app.listen(PORT, '127.0.0.1', () => {
-  console.log(`Server running at http://127.0.0.1:${PORT}`);
-});
+// ── Start server (only when run directly, not when required by tests) ─────────
+if (require.main === module) {
+  const server = app.listen(PORT, '127.0.0.1', () => {
+    console.log(`Server running at http://127.0.0.1:${PORT}`);
+  });
 
-server.on('error', (err) => {
-  console.error('Server error:', err);
-});
+  server.on('error', (err) => { console.error('Server error:', err); });
 
-process.on('exit', (code) => {
-  console.log('Process exiting with code', code);
-});
+  process.on('SIGINT', () => {
+    console.log('Stopped with Ctrl+C');
+    process.exit(0);
+  });
+}
 
-process.on('SIGINT', () => {
-  console.log('Stopped with Ctrl+C');
-  process.exit(0);
-});
+module.exports = app;
