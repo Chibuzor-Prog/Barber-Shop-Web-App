@@ -160,6 +160,7 @@ const ServiceManagement: React.FC = () => {
   };
 
   return (
+    <div>
     <AdminPageLayout title="Service Management">
       <div className="max-w-2xl space-y-6">
 
@@ -266,6 +267,11 @@ const ServiceManagement: React.FC = () => {
             </div>
           </form>
         </div>
+            
+      </div>
+    </AdminPageLayout>
+    <AdminPageLayout title="">
+      <div className="max-w-7xl space-y-6">
 
         {/* ── Services table ── */}
         <SectionCard>
@@ -348,6 +354,7 @@ const ServiceManagement: React.FC = () => {
         </SectionCard>
       </div>
     </AdminPageLayout>
+    </div>
   );
 };
 
