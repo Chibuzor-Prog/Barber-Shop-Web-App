@@ -8,6 +8,7 @@ import JoinQueue from "./components/user/JoinQueue";
 import QueueStatus from "./components/user/QueueStatus";
 import History from "./components/user/History";
 import AdminShell from "./components/admin/AdminShell";
+import UserShell from "./components/user/UserShell";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import { QueueProvider } from "./context/QueueContext";
 import Notifications from "./components/common/Notifications";
@@ -25,10 +26,12 @@ const App: React.FC = () => (
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/otp" element={<OTPVerification />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/join-queue" element={<JoinQueue />} />
-            <Route path="/queue-status" element={<QueueStatus />} />
-            <Route path="/history" element={<History />} />
+            <Route path="/user" element={<UserShell />}>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="join-queue" element={<JoinQueue />} />
+              <Route path="queue-status" element={<QueueStatus />} />
+              <Route path="history" element={<History />} />
+            </Route>
             <Route path="/admin" element={<AdminShell />}>
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="queue" element={<QueueManagement />} />

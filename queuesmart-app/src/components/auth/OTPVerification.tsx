@@ -58,7 +58,7 @@ const OTPVerification: React.FC = () => {
     }
 
     verifyOTP();
-    navigate(tempUser.role === "admin" ? "/admin/dashboard" : "/dashboard");
+    navigate(tempUser.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
   };
 
   return (
