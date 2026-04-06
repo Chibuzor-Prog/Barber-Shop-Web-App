@@ -32,22 +32,37 @@ export const authApi = {
 export const servicesApi = {
   getAll: () => request<any[]>('/services'),
 
-  getById: (id: number) => request<any>(`/services/${id}`),
+  getById: (id: string) => request<any>(`/services/${id}`),
 
-  create: (payload: { name: string; description: string; duration: number; priority: string }) =>
-    request<{ message: string; service: any }>('/services', {
+  create: (payload: { name: string; description: string; duration: number; priority: string }) => {
+    // Map frontend fields to backend schema
+    const backendPayload = {
+      serviceId: payload.name.toLowerCase().replace(/\s+/g, '-'), // simple unique id
+      name: payload.name,
+      description: payload.description,
+      expectedDuration: payload.duration,
+      priorityLevel: payload.priority === 'high' ? 1 : payload.priority === 'medium' ? 2 : 3
+    };
+    return request<{ message: string; service: any }>('/services', {
       method: 'POST',
-      body:   JSON.stringify(payload),
-    }),
+      body: JSON.stringify(backendPayload),
+    });
+  },
 
-  update: (id: number, payload: Partial<{ name: string; description: string; duration: number; priority: string }>) =>
-    request<{ message: string; service: any }>(`/services/${id}`, {
+  update: (id: string, payload: Partial<{ name: string; description: string; duration: number; priority: string }>) => {
+    // Map frontend fields to backend schema
+    const backendPayload: any = {};
+    if (payload.name !== undefined) backendPayload.name = payload.name;
+    if (payload.description !== undefined) backendPayload.description = payload.description;
+    if (payload.duration !== undefined) backendPayload.expectedDuration = payload.duration;
+    if (payload.priority !== undefined) backendPayload.priorityLevel = payload.priority === 'high' ? 1 : payload.priority === 'medium' ? 2 : 3;
+    return request<{ message: string; service: any }>(`/services/${id}`, {
       method: 'PUT',
-      body:   JSON.stringify(payload),
-    }),
+      body: JSON.stringify(backendPayload),
+    });
+  },
 
-  // ── ADDED: delete service endpoint
-  delete: (id: number) =>
+  delete: (id: string) =>
     request<{ message: string; service: any }>(`/services/${id}`, {
       method: 'DELETE',
     }),

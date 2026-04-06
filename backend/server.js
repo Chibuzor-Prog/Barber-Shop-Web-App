@@ -1,12 +1,24 @@
 // backend/server.js
+
 const express           = require('express');
 const cors              = require('cors');
+const mongoose          = require('mongoose');
 const authRoutes        = require('./routes/authRoutes');
 const queueRoutes       = require('./routes/queueRoutes');
 const serviceRoutes     = require('./routes/serviceRoutes');
 const historyRoutes     = require('./routes/historyRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const store             = require('./data/store');
+
+// ── MongoDB Connection ──────────────────────────────────────────────────────
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/queuesmart';
+mongoose.connect(MONGO_URI);
+mongoose.connection.on('connected', () => {
+  console.log('MongoDB connected');
+});
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+});
 
 const app  = express();
 const PORT = 5001;

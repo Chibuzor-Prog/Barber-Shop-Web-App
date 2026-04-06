@@ -21,11 +21,12 @@ import SectionCard from "./ui/SectionCard";
 type Priority = "low" | "medium" | "high";
 
 type Service = {
-  id: number;
+  _id: string;
+  serviceId: string;
   name: string;
   description: string;
-  duration: number;
-  priority: Priority;
+  expectedDuration: number;
+  priorityLevel: number;
 };
 
 // Mirrors QueueContext's broadcastSync — notifies other open pages immediately
@@ -75,8 +76,8 @@ const ServiceManagement: React.FC = () => {
     setEditingService(svc);
     setName(svc.name);
     setDesc(svc.description);
-    setDuration(svc.duration);
-    setPriority(svc.priority);
+    setDuration(svc.expectedDuration);
+    setPriority(svc.priorityLevel === 1 ? "high" : svc.priorityLevel === 2 ? "medium" : "low");
     setError(""); setSuccess("");
   };
 
@@ -100,7 +101,7 @@ const ServiceManagement: React.FC = () => {
         duration: Number(duration),
         priority,
       });
-      setSuccess(`Service "${result.service.name}" added (ID: ${result.service.id})`);
+      setSuccess(`Service "${result.service.name}" added (ID: ${result.service.serviceId})`);
       clearForm();
       await fetchServices();
       broadcastSync();
@@ -117,7 +118,7 @@ const ServiceManagement: React.FC = () => {
     if (!editingService || !validate()) return;
     setLoading(true); setError(""); setSuccess("");
     try {
-      const result = await servicesApi.update(editingService.id, {
+      const result = await servicesApi.update(editingService._id, {
         name: name.trim(),
         description: desc.trim(),
         duration: Number(duration),
@@ -135,7 +136,7 @@ const ServiceManagement: React.FC = () => {
   };
 
   // ── DELETE ─────────────────────────────────────────────────────────────────
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm("Delete this service?")) return;
     setLoading(true); setError(""); setSuccess("");
     try {
