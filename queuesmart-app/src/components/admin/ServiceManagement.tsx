@@ -295,15 +295,15 @@ const ServiceManagement: React.FC = () => {
             <div className="divide-y divide-gray-100 bg-white">
               {services.map((svc) => (
                 <div
-                  key={svc.id}
+                  key={svc._id}
                   className={`grid grid-cols-12 items-center px-4 py-3 transition hover:bg-gray-50 ${
-                    editingService?.id === svc.id ? "bg-blue-50" : ""
+                    editingService?._id === svc._id ? "bg-blue-50" : ""
                   }`}
                 >
                   {/* Name */}
                   <div className="col-span-3 min-w-0">
                     <p className="truncate font-medium text-gray-900">{svc.name}</p>
-                    <p className="text-xs text-gray-400">ID: {svc.id}</p>
+                    <p className="text-xs text-gray-400">ID: {svc._id}</p>
                   </div>
 
                   {/* Description */}
@@ -335,7 +335,7 @@ const ServiceManagement: React.FC = () => {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(svc.id)}
+                      onClick={() => handleDelete(svc._id)}
                       disabled={loading}
                       className="rounded-lg bg-red-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
                     >
