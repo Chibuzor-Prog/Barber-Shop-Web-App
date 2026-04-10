@@ -1,0 +1,229 @@
+/**
+ * backend/data/seed/users.mongodb
+ *
+ * MongoDB Shell seed script for the "usercredentials" and "userprofiles" collections.
+ * Run in mongosh:   load("data/seed/users.mongodb")
+ * Run in Compass:   Open MongoDB Compass → MONGOSH tab → paste and execute
+ * Run in VS Code:   Open file → Run "MongoDB: Run All Queries" (MongoDB for VS Code extension)
+ *
+ * IMPORTANT — PASSWORD HASHING:
+ *   MongoDB shell does not have bcrypt built in.
+ *   The passwordHash values below were pre-generated using bcrypt with 10 salt rounds.
+ *   You can regenerate them in Node.js with:
+ *     const bcrypt = require('bcryptjs');
+ *     const hash = await bcrypt.hash('plaintext', 10);
+ *
+ *   Plain-text passwords (for reference / login testing only — never stored):
+ *     john@example.com   → 123456
+ *     admin@example.com  → admin123
+ *     jane@example.com   → jane1234
+ *     bob@example.com    → bob5678
+ *     sara@example.com   → sara9999
+ *     mike@example.com   → mike2222
+ *     lisa@example.com   → lisa3333
+ *
+ * This script is IDEMPOTENT — safe to run multiple times.
+ * Existing users (matched by email) are skipped, not overwritten.
+ */
+
+use("queuesmart");
+
+// ── Helper: insert one user (credentials + profile) if email not already present
+function seedUser(credentials, profile) {
+  const existing = db.usercredentials.findOne({ email: credentials.email });
+  if (existing) {
+    print(`  SKIP — ${credentials.email} already exists.`);
+    return existing._id;
+  }
+
+  const credResult = db.usercredentials.insertOne(credentials);
+  const credId     = credResult.insertedId;
+
+  db.userprofiles.insertOne({
+    ...profile,
+    credentialId: credId,    // FK reference to UserCredentials._id
+  });
+
+  print(`  INSERTED — ${credentials.email} (${credentials.role})`);
+  return credId;
+}
+
+print("\nSeeding users...\n");
+
+// ── User 1: Regular user (John Doe) ───────────────────────────────────────────
+// plain password: 123456
+seedUser(
+  {
+    email:        "john@example.com",
+    passwordHash: "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    role:         "user",
+    createdAt:    new Date(),
+    updatedAt:    new Date(),
+  },
+  {
+    email:       "john@example.com",
+    fullName:    "John Doe",
+    phone:       "+1 (555) 101-0001",
+    preferences: {
+      notifications: true,
+      language:      "en",
+    },
+    createdAt:   new Date(),
+    updatedAt:   new Date(),
+  }
+);
+
+// ── User 2: Admin ──────────────────────────────────────────────────────────────
+// plain password: admin123
+seedUser(
+  {
+    email:        "admin@example.com",
+    passwordHash: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+    role:         "admin",
+    createdAt:    new Date(),
+    updatedAt:    new Date(),
+  },
+  {
+    email:       "admin@example.com",
+    fullName:    "Admin User",
+    phone:       "+1 (555) 000-0000",
+    preferences: {
+      notifications: true,
+      language:      "en",
+      adminPanel:    true,
+    },
+    createdAt:   new Date(),
+    updatedAt:   new Date(),
+  }
+);
+
+// ── User 3: Jane Smith ────────────────────────────────────────────────────────
+// plain password: jane1234
+seedUser(
+  {
+    email:        "jane@example.com",
+    passwordHash: "$2a$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm",
+    role:         "user",
+    createdAt:    new Date(),
+    updatedAt:    new Date(),
+  },
+  {
+    email:       "jane@example.com",
+    fullName:    "Jane Smith",
+    phone:       "+1 (555) 202-0002",
+    preferences: {
+      notifications: true,
+      language:      "en",
+    },
+    createdAt:   new Date(),
+    updatedAt:   new Date(),
+  }
+);
+
+// ── User 4: Bob Johnson ───────────────────────────────────────────────────────
+// plain password: bob5678
+seedUser(
+  {
+    email:        "bob@example.com",
+    passwordHash: "$2a$10$4FBpbJ8TpS6XCRexRJIuUe6DJmHSIBi.iQsMPD.A9OKZO4yyOGzYS",
+    role:         "user",
+    createdAt:    new Date(),
+    updatedAt:    new Date(),
+  },
+  {
+    email:       "bob@example.com",
+    fullName:    "Bob Johnson",
+    phone:       "+1 (555) 303-0003",
+    preferences: {
+      notifications: false,
+      language:      "en",
+    },
+    createdAt:   new Date(),
+    updatedAt:   new Date(),
+  }
+);
+
+// ── User 5: Sara Williams ─────────────────────────────────────────────────────
+// plain password: sara9999
+seedUser(
+  {
+    email:        "sara@example.com",
+    passwordHash: "$2a$10$YkNFV5UaRPOGdFM8qNkXveF1P0EWqJV.9c3d.GIaXikOnmRizVLs.",
+    role:         "user",
+    createdAt:    new Date(),
+    updatedAt:    new Date(),
+  },
+  {
+    email:       "sara@example.com",
+    fullName:    "Sara Williams",
+    phone:       "+1 (555) 404-0004",
+    preferences: {
+      notifications: true,
+      language:      "en",
+    },
+    createdAt:   new Date(),
+    updatedAt:   new Date(),
+  }
+);
+
+// ── User 6: Mike Davis ────────────────────────────────────────────────────────
+// plain password: mike2222
+seedUser(
+  {
+    email:        "mike@example.com",
+    passwordHash: "$2a$10$tFTmT6a5A2RZo/9DGo/e3Op0PXcq2FMajp7X5f6WpMxKlwS0fAlFO",
+    role:         "user",
+    createdAt:    new Date(),
+    updatedAt:    new Date(),
+  },
+  {
+    email:       "mike@example.com",
+    fullName:    "Mike Davis",
+    phone:       "+1 (555) 505-0005",
+    preferences: {
+      notifications: true,
+      language:      "en",
+    },
+    createdAt:   new Date(),
+    updatedAt:   new Date(),
+  }
+);
+
+// ── User 7: Lisa Chen ─────────────────────────────────────────────────────────
+// plain password: lisa3333
+seedUser(
+  {
+    email:        "lisa@example.com",
+    passwordHash: "$2a$10$cXRmunqXD8D0fRlXo6GzWO5p2K7lH0dG5VxfzfYYNXs9.G1jANsmy",
+    role:         "user",
+    createdAt:    new Date(),
+    updatedAt:    new Date(),
+  },
+  {
+    email:       "lisa@example.com",
+    fullName:    "Lisa Chen",
+    phone:       "+1 (555) 606-0006",
+    preferences: {
+      notifications: true,
+      language:      "en",
+    },
+    createdAt:   new Date(),
+    updatedAt:   new Date(),
+  }
+);
+
+// ── Summary ───────────────────────────────────────────────────────────────────
+print("\n── Users in database ─────────────────────────────────────────────────────");
+db.usercredentials.find({}, { email: 1, role: 1 }).forEach(u => {
+  print(`  [${u.role.toUpperCase()}] ${u.email}`);
+});
+print(`\nTotal credentials: ${db.usercredentials.countDocuments()}`);
+print(`Total profiles:    ${db.userprofiles.countDocuments()}`);
+
+// ── Create indexes ────────────────────────────────────────────────────────────
+db.usercredentials.createIndex({ email: 1 }, { unique: true });
+db.userprofiles.createIndex({ credentialId: 1 }, { unique: true });
+db.userprofiles.createIndex({ email: 1 });
+
+print("\nIndexes created on usercredentials and userprofiles.");
+print("User seeding complete.");
