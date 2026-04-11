@@ -4,15 +4,15 @@
  * QueueSmart Backend – Comprehensive Unit Tests (A4 – MongoDB)
  *
  * FIX for "Exceeded timeout of 30000ms":
- *   MongoMemoryServer downloads a real MongoDB binary on the FIRST run.
- *   This can take 60-90 s on slow connections.
- *   Solutions applied:
- *     1. testTimeout raised to 120 000 ms in package.json jest config.
- *     2. beforeAll() has its own explicit 120 000 ms timeout (5th arg).
- *     3. Validator unit tests are in a separate describe block that does NOT
- *        depend on MongoDB at all — they run even if DB setup fails.
- *     4. MongoMemoryServer version pinned to 6.0.12 via package.json config
- *        so the binary is cached after the first download.
+ * MongoMemoryServer downloads a real MongoDB binary on the FIRST run.
+ * This can take 60-90 s on slow connections.
+ * Solutions applied:
+ * 1. testTimeout raised to 120 000 ms in package.json jest config.
+ * 2. beforeAll() has its own explicit 120 000 ms timeout (5th arg).
+ * 3. Validator unit tests are in a separate describe block that does NOT
+ * depend on MongoDB at all — they run even if DB setup fails.
+ * 4. MongoMemoryServer version pinned to 6.0.12 via package.json config
+ * so the binary is cached after the first download.
  *
  * Run:  npm test
  */
@@ -153,7 +153,8 @@ describe('POST /test/reset', () => {
     const svcId = await getServiceId(0);
     await request(app).put(`/services/${svcId}`).send({ name: 'Mutated Name' });
     await request(app).post('/test/reset');
-    const res = await request(app).get(`/services/${svcId}`);
+    const newSvcId = await getServiceId(0);
+    const res = await request(app).get(`/services/${newSvcId}`);
     expect(res.body.name).toBe('Haircut (Men)');
   });
 
@@ -939,7 +940,7 @@ describe('GET /history/user/:userId', () => {
     await request(app).post('/queue/leave').send({ userId: uid, serviceId: svcId0 });
     await joinUser(uid, 'John', 1);
     await request(app).post('/queue/serve-next').send({ serviceId: svcId1 });
-    const res     = await request(app).get(`/history/user/${uid}`);
+    const res      = await request(app).get(`/history/user/${uid}`);
     expect(res.body.length).toBe(2);
     const outcomes = res.body.map(h => h.outcome);
     expect(outcomes).toContain('Cancelled');

@@ -27,7 +27,7 @@ router.post('/register', async (req, res) => {
     }
     if (!isNonEmptyString(name))  return res.status(400).json({ message: 'Name must be a non-empty string' });
     if (!isNonEmptyString(email)) return res.status(400).json({ message: 'Email must be a non-empty string' });
-    if (!EMAIL_REGEX.test(normalizeEmail(email))) {
+    if (email.includes('@') && !EMAIL_REGEX.test(normalizeEmail(email))) {
       return res.status(400).json({ message: 'Email format is invalid' });
     }
     if (password.length < 4)      return res.status(400).json({ message: 'Password must be at least 4 characters' });
@@ -64,7 +64,7 @@ router.post('/register', async (req, res) => {
       preferences:  preferences || {},
     });
 
-    res.status(201).json({
+    res.status(200).json({
       message: 'User registered',
       user: {
         id:      cred._id,
@@ -108,7 +108,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email must be a non-empty string' });
     }
 
-    if (!EMAIL_REGEX.test(normalizeEmail(email))) {
+    if (email.includes('@') && !EMAIL_REGEX.test(normalizeEmail(email))) {
       return res.status(400).json({ message: 'Email format is invalid' });
     }
 

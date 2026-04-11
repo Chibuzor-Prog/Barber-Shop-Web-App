@@ -10,8 +10,8 @@ function shapeService(s) {
     id:               s._id,
     name:             s.name,
     description:      s.description,
-    expectedDuration: s.expectedDuration,   // renamed from duration
-    priorityLevel:    s.priorityLevel,      // renamed from priority
+    expectedDuration: s.expectedDuration ?? s.duration,   // renamed from duration
+    priorityLevel:    s.priorityLevel ?? s.priority,      // renamed from priority
   };
 }
 
