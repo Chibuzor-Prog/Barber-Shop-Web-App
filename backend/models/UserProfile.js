@@ -6,6 +6,9 @@
 
 const mongoose = require('mongoose');
 
+// Added helper for consistent email normalization
+const normalizeEmail = (email) => email.toLowerCase().trim();
+
 const userProfileSchema = new mongoose.Schema(
   {
     // ── Foreign key: references UserCredentials._id ────────────────────────────
@@ -24,6 +27,7 @@ const userProfileSchema = new mongoose.Schema(
       trim:      true,
       lowercase: true,
       maxlength: [254, 'Email must be 254 characters or fewer'],
+      match:     [/^\S+@\S+\.\S+$/, 'Email format is invalid'], // Added validation
     },
 
     // ── Core profile fields ────────────────────────────────────────────────────
@@ -61,5 +65,36 @@ const userProfileSchema = new mongoose.Schema(
 
 // Index on email for fast profile lookup by email
 userProfileSchema.index({ email: 1 });
+
+// Added index for credentialId for faster joins/lookups
+userProfileSchema.index({ credentialId: 1 });
+
+// Added pre-validation cleanup to normalize email
+userProfileSchema.pre('validate', function (next) {
+  if (this.email && typeof this.email === 'string') {
+    this.email = normalizeEmail(this.email);
+  }
+  next();
+});
+
+// Added validation to ensure preferences is always a valid object (not array/null)
+userProfileSchema.pre('save', function (next) {
+  if (
+    this.preferences &&
+    (typeof this.preferences !== 'object' ||
+     this.preferences === null ||
+     Array.isArray(this.preferences))
+  ) {
+    return next(new Error('Preferences must be a valid object'));
+  }
+  next();
+});
+
+// Added transform to clean output if needed in future (safe extension point)
+userProfileSchema.set('toJSON', {
+  transform(doc, ret) {
+    return ret;
+  },
+});
 
 module.exports = mongoose.model('UserProfile', userProfileSchema);
