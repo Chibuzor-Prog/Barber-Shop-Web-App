@@ -1,8 +1,4 @@
-// src/hooks/useServices.ts
-// Fetches services from backend, caches in localStorage, reacts to storage events.
-// Field names match the MongoDB Service schema:
-//   expectedDuration  (renamed from duration)
-//   priorityLevel     (renamed from priority)
+
 
 import { useState, useEffect, useCallback } from "react";
 import { servicesApi } from "../api/api";

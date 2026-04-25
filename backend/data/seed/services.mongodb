@@ -1,17 +1,4 @@
-/**
- * backend/data/seed/services.mongodb
- *
- * MongoDB Shell seed script for the "services" collection.
- * Run in mongosh:      load("data/seed/services.mongodb")
- * Run in VS Code:      Open file → Run "MongoDB: Run All Queries"
- * Run in Compass:      MONGOSH tab → paste and execute
- *
- * Field names match the Mongoose Service schema:
- *   expectedDuration  (renamed from: duration)
- *   priorityLevel     (renamed from: priority)
- *
- * This script is IDEMPOTENT — safe to run multiple times.
- */
+
 
 use("queuesmart");
 

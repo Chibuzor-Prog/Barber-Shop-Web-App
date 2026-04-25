@@ -1,6 +1,4 @@
-// src/admin/ui/AdminPageLayout.tsx
-// Wraps every admin page with a consistent header (title + optional actions)
-// and a scrollable content area.
+
 
 import React from "react";
 

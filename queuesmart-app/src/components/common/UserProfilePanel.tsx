@@ -1,13 +1,4 @@
-// src/common/UserProfilePanel.tsx
-//
-// A slide-in panel (not a modal) that shows the logged-in user's profile.
-// Triggered by clicking the user avatar icon in the sidebar.
-//
-// Editable fields: Full Name, Phone Number, Contact Information.
-// Read-only fields: Email, Role.
-//
-// On Save: calls PATCH /profile/:credentialId — persists to MongoDB or PostgreSQL.
-// On Close: slides out without saving.
+
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";

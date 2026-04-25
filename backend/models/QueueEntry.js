@@ -1,4 +1,4 @@
-// backend/models/QueueEntry.js
+
 // Tracks individual users waiting in a queue (one document per join).
 
 const mongoose = require('mongoose');

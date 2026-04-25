@@ -1,7 +1,4 @@
-// src/auth/OTPVerification.tsx
-// 6-digit OTP verification step — sits between login and the main dashboard.
-// The generated code is hardcoded to "123456" for development purposes.
-// In production this would be sent via SMS / email.
+
 
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";

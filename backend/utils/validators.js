@@ -1,5 +1,4 @@
-// backend/utils/validators.js
-// Reusable validation helpers used by route handlers and tested directly.
+
 
 /**
  * Returns true if value is a non-empty string (after trimming).

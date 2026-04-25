@@ -1,6 +1,4 @@
-// src/auth/Register.tsx
-// A4 update: calls authApi.register() which hits backend /auth/register.
-// Backend now stores hashed passwords and creates UserCredentials + UserProfile documents.
+
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";

@@ -1,6 +1,4 @@
-// src/user/JoinQueue.tsx
-// Stat changes per requirements:
-//
+
 //  Top stat "Estimated Wait"  → "Total Estimated Wait"
 //    = sum over each of user's services of
 //      (people who joined BEFORE user in that service) × service.expectedDuration

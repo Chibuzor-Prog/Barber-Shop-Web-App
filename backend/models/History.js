@@ -1,4 +1,4 @@
-// backend/models/History.js
+
 // Tracks completed queue participation records for users.
 // Written when a user is served or cancels — never mutated after creation.
 

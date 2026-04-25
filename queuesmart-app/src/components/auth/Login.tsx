@@ -1,7 +1,4 @@
-// src/auth/Login.tsx
-// ── CHANGED: handleLogin is now async and calls authContext.login(email, password)
-//    which itself calls the backend /auth/login endpoint.
-//    Removed mockUsers import entirely.
+
 
 import React, { useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";

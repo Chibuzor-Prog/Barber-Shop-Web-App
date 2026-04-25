@@ -1,8 +1,4 @@
-// src/api/api.ts
-// Central API client for QueueSmart backend.
-// Switch backends by editing src/api/config.ts (or set VITE_API_URL in .env).
-// MongoDB backend: port 5001   |   PostgreSQL backend: port 5002
-// Both backends expose an identical REST API surface.
+// MongoDB backend: port 5001   
 
 import BASE_URL from './config';
 

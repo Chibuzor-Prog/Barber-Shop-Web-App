@@ -1,6 +1,4 @@
-// backend/models/UserCredentials.js
-// Stores authentication-related information.
-// Passwords are hashed with bcryptjs — plain-text passwords are never stored.
+
 
 const mongoose = require('mongoose');
 const bcrypt   = require('bcryptjs');

@@ -1,6 +1,4 @@
-// src/user/UserShell.tsx
-// Protected route wrapper for user pages.
-// Includes SmartAssistant floating AI chatbot (bottom-right).
+
 
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";

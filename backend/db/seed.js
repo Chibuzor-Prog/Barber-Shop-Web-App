@@ -1,7 +1,6 @@
-// backend/db/seed.js
+
 // Auto-seeds the MongoDB database on server startup when collections are empty.
 // Imports data from data/seed/services.mongo.js and data/seed/users.mongo.js.
-// Run manually:  node db/seed.js
 // Runs automatically from server.js when DB collections are empty.
 
 require('dotenv').config();

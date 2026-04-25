@@ -1,7 +1,4 @@
-// src/common/UserProfileIcon.tsx
-// A clickable user avatar button placed in the sidebar.
-// Shows the user's initials inside a coloured circle.
-// Clicking it opens the UserProfilePanel slide-in.
+
 
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";

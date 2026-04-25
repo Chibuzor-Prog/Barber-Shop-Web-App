@@ -1,6 +1,4 @@
-// src/user/QueueStatus.tsx
-// Stat changes per requirements:
-//
+
 //  "Est. Wait" (table col) = sum over user's services of
 //    (people who joined BEFORE the user in that service) × service.expectedDuration
 //    — same Total Estimated Wait formula, shown per-service context

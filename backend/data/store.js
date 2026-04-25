@@ -1,8 +1,6 @@
-// backend/data/store.js
+
 // Single source of truth for all in-memory data.
-// Using a store object (not bare exported arrays) means route modules always
-// read/write the SAME reference — clearing the store resets all data without
-// needing require-cache tricks.
+
 
 let _idCounter = 1;
 function nextId() { return _idCounter++; }

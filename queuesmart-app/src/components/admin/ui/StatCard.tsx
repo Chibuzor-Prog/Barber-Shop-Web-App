@@ -1,6 +1,3 @@
-// src/admin/ui/StatCard.tsx
-// Metric display card: label on top, large value in the middle, sub-label below.
-// Used in both admin and user dashboard pages.
 
 import React from "react";
 

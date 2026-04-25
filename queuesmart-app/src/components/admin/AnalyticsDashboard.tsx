@@ -1,7 +1,4 @@
-// src/admin/AnalyticsDashboard.tsx
-// ── CHANGED: chart and summary data derived from backend-polled QueueContext
-//    and useServices hook. No localStorage, no MOCK_QUEUE_LENGTHS, no
-//    generateUsers, no mockServices import.
+
 
 import React from "react";
 import {

@@ -1,7 +1,4 @@
-// src/context/QueueContext.tsx
-// A4 update: all ids are MongoDB ObjectId strings.
-// Real-time strategy: 3-second polling + localStorage "qs_sync" broadcast
-// for instant cross-page / cross-tab reactivity.
+
 
 import React, {
   createContext,

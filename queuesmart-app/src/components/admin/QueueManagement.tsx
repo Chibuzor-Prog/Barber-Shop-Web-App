@@ -1,7 +1,4 @@
-// src/admin/QueueManagement.tsx
-// Change per requirements:
-//   Added "Checked In" column between Status and Actions.
-//   Value = entry.joinedAt formatted as HH:MM (local time).
+
 
 import React from "react";
 import AdminPageLayout from "./ui/AdminPageLayout";

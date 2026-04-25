@@ -1,4 +1,3 @@
-// src/admin/AdminDashboard.tsx
 // Stat calculations per requirements:
 //
 //  Avg service time        = sum(Est. Waiting Time per service) / sum(In Queue per service)

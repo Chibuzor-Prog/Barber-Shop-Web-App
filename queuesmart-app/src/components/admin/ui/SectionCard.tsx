@@ -1,5 +1,4 @@
-// src/admin/ui/SectionCard.tsx
-// White rounded card container used to group related content on a page.
+
 
 import React from "react";
 

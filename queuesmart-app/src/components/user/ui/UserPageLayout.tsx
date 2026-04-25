@@ -1,5 +1,4 @@
-// src/user/ui/UserPageLayout.tsx
-// Wraps every user page with a consistent header and scrollable body.
+
 
 import React from "react";
 

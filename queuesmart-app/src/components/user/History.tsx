@@ -1,7 +1,4 @@
-// src/user/History.tsx
-// ── CHANGED: history fetched from backend on mount AND re-fetched whenever
-//    a "storage" event fires (meaning another page triggered a queue action).
-//    No hardcoded mock history array.
+
 
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";

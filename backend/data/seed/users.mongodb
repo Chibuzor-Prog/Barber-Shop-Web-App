@@ -1,17 +1,5 @@
 /**
- * backend/data/seed/users.mongodb
- *
- * MongoDB Shell seed script for the "usercredentials" and "userprofiles" collections.
- * Run in mongosh:   load("data/seed/users.mongodb")
- * Run in Compass:   Open MongoDB Compass → MONGOSH tab → paste and execute
- * Run in VS Code:   Open file → Run "MongoDB: Run All Queries" (MongoDB for VS Code extension)
- *
- * IMPORTANT — PASSWORD HASHING:
- *   MongoDB shell does not have bcrypt built in.
- *   The passwordHash values below were pre-generated using bcrypt with 10 salt rounds.
- *   You can regenerate them in Node.js with:
- *     const bcrypt = require('bcryptjs');
- *     const hash = await bcrypt.hash('plaintext', 10);
+
  *
  *   Plain-text passwords (for reference / login testing only — never stored):
  *     john@example.com   → 123456
@@ -22,8 +10,7 @@
  *     mike@example.com   → mike2222
  *     lisa@example.com   → lisa3333
  *
- * This script is IDEMPOTENT — safe to run multiple times.
- * Existing users (matched by email) are skipped, not overwritten.
+
  */
 
 use("queuesmart");

@@ -1,7 +1,7 @@
-// backend/db/connection.js
+
 // Establishes and exports the Mongoose connection.
-// In test mode (NODE_ENV=test), the caller passes in a URI from MongoMemoryServer.
-// In all other modes, MONGO_URI from .env is used.
+
+
 
 const mongoose = require('mongoose');
 

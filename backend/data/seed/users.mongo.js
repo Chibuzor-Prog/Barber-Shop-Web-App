@@ -1,17 +1,11 @@
 /**
- * backend/data/seed/users.mongo.js
- *
- * Node.js seed data for UserCredentials + UserProfile collections.
- * Imported by db/seed.js which runs automatically on server start.
- *
+ 
  * IMPORTANT — PASSWORD HANDLING:
  *   Passwords listed here are PLAIN-TEXT only for seed definition purposes.
  *   db/seed.js hashes every password with bcrypt (10 rounds) before inserting.
  *   Plain-text passwords are NEVER written to MongoDB.
  *
- * Each object generates TWO MongoDB documents:
- *   1. UserCredentials  { email, passwordHash, role }
- *   2. UserProfile      { credentialId, email, fullName, phone, preferences }
+
  *
  * Seeded accounts (for login / testing):
  *   john@example.com   → 123456    (user)

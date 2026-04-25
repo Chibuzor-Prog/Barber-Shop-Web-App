@@ -1,4 +1,4 @@
-// src/App.tsx
+
 // Root application component — defines all routes.
 // Uses React Router v6 nested routes with AdminShell / UserShell as guards.
 

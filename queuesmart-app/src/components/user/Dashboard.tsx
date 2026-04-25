@@ -1,6 +1,4 @@
-// src/user/Dashboard.tsx
-// Stat changes per requirements:
-//
+
 //  "Est. Wait"       → "Service Duration"      = service.expectedDuration  (per row)
 //  "Estimated Wait"  → "Total Estimated Wait"  = sum over all user services of
 //                        (people waiting in that service × service.expectedDuration)

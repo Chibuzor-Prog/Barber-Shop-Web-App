@@ -1,6 +1,4 @@
-// src/admin/AdminLayout.tsx
-// Admin sidebar navigation — identical structure to original.
-// ADDED: UserProfileIcon at the bottom of the sidebar.
+
 
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";

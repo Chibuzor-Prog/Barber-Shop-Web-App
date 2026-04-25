@@ -1,4 +1,4 @@
-// backend/models/Notification.js
+
 // Tracks system notifications and queue history activity.
 // Serves dual purpose: real-time notifications + historical record.
 

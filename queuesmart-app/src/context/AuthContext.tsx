@@ -1,7 +1,4 @@
-// src/context/AuthContext.tsx
-// Updated for A4: user.id is now a MongoDB ObjectId string from the backend.
-// login() is async and calls the backend /auth/login endpoint.
-// Passwords are never stored in the frontend — only the returned user object.
+
 
 import React, { createContext, useContext, useState } from "react";
 import { authApi } from "../api/api";

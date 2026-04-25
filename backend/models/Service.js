@@ -1,5 +1,5 @@
-// backend/models/Service.js
-// Stores services offered by the organisation.
+
+// Stores services offered by the saloon.
 
 const mongoose = require('mongoose');
 

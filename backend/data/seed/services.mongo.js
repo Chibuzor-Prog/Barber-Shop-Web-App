@@ -1,13 +1,4 @@
-/**
- * backend/data/seed/services.mongo.js
- *
- * Node.js seed data for the Services collection.
- * Imported by db/seed.js which runs automatically on server start.
- *
- * Field names match the Mongoose Service schema exactly:
- *   expectedDuration  (was: duration)
- *   priorityLevel     (was: priority)
- */
+
 
 const SEED_SERVICES = [
 

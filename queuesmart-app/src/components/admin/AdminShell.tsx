@@ -1,6 +1,4 @@
-// src/admin/AdminShell.tsx
-// Protected route wrapper for admin pages.
-// Includes SmartAssistant — useful for admins to query queue state quickly.
+
 
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";

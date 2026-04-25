@@ -1,4 +1,4 @@
-// backend/models/Queue.js
+
 // Represents an active queue for a service.
 // One open queue exists per service at a time.
 

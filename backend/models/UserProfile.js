@@ -1,8 +1,4 @@
-// backend/models/UserProfile.js
-// Stores user-related details.
-// Linked to UserCredentials via credentialId (ObjectId ref) AND email (denormalised).
-// The email field is denormalised here for convenience so profile queries don't
-// always need to join UserCredentials — both fields are kept in sync on register.
+
 
 const mongoose = require('mongoose');
 

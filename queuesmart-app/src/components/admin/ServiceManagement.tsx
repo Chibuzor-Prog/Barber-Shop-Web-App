@@ -1,8 +1,4 @@
-// src/admin/ServiceManagement.tsx
-// Full Add / Edit / Delete with table, backend-integrated, broadcasts sync.
-// Field names match the MongoDB Service schema:
-//   expectedDuration  (renamed from duration)
-//   priorityLevel     (renamed from priority)
+
 
 import { useState, useEffect, useCallback } from "react";
 import { servicesApi } from "../../api/api";

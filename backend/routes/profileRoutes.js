@@ -1,7 +1,4 @@
-// backend/routes/profileRoutes.js
-// Handles user profile retrieval and updates.
-// GET  /profile/:credentialId  — fetch profile (joined with role from UserCredentials)
-// PATCH /profile/:credentialId — update editable fields (phone, contactInfo, fullName)
+
 
 const express         = require('express');
 const router          = express.Router();

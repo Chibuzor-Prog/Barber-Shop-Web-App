@@ -1,21 +1,6 @@
 'use strict';
 
-/**
- * QueueSmart Backend – Comprehensive Unit Tests (A4 – MongoDB)
- *
- * FIX for "Exceeded timeout of 30000ms":
- * MongoMemoryServer downloads a real MongoDB binary on the FIRST run.
- * This can take 60-90 s on slow connections.
- * Solutions applied:
- * 1. testTimeout raised to 120 000 ms in package.json jest config.
- * 2. beforeAll() has its own explicit 120 000 ms timeout (5th arg).
- * 3. Validator unit tests are in a separate describe block that does NOT
- * depend on MongoDB at all — they run even if DB setup fails.
- * 4. MongoMemoryServer version pinned to 6.0.12 via package.json config
- * so the binary is cached after the first download.
- *
- * Run:  npm test
- */
+
 
 process.env.NODE_ENV = 'test';
 
@@ -24,7 +9,7 @@ const mongoose = require('mongoose');
 const request  = require('supertest');
 
 // ── Validator tests run independently of MongoDB ──────────────────────────────
-// Placed FIRST so they pass even if MongoMemoryServer times out.
+
 const {
   isNonEmptyString,
   isPositiveNumber,
