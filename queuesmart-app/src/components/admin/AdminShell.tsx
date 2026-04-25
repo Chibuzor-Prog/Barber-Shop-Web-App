@@ -1,12 +1,28 @@
-import { Outlet } from "react-router-dom";
-import AdminLayout from "./AdminLayout";
+// src/admin/AdminShell.tsx
+// Protected route wrapper for admin pages.
+// Includes SmartAssistant — useful for admins to query queue state quickly.
 
-export default function AdminShell() {
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth }       from "../../context/AuthContext";
+import AdminLayout       from "./AdminLayout";
+import Notifications     from "../common/Notifications";
+import SmartAssistant    from "../common/SmartAssistant-Gemini";
+
+const AdminShell: React.FC = () => {
+  const { user } = useAuth();
+
+  if (!user)                  return <Navigate to="/" replace />;
+  if (user.role !== "admin")  return <Navigate to="/user/dashboard" replace />;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <AdminLayout>
-        <Outlet />
-      </AdminLayout>
-    </div>
+    <AdminLayout>
+      <Notifications />
+      <Outlet />
+      {/* ── AI Smart Assistant — available on every admin page ── */}
+      <SmartAssistant />
+    </AdminLayout>
   );
-}
+};
+
+export default AdminShell;

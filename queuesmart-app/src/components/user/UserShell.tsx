@@ -1,12 +1,28 @@
-import { Outlet } from "react-router-dom";
-import UserLayout from "./UserLayout";
+// src/user/UserShell.tsx
+// Protected route wrapper for user pages.
+// Includes SmartAssistant floating AI chatbot (bottom-right).
 
-export default function UserShell() {
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth }       from "../../context/AuthContext";
+import UserLayout        from "./UserLayout";
+import Notifications     from "../common/Notifications";
+import SmartAssistant    from "../common/SmartAssistant-Gemini";
+
+const UserShell: React.FC = () => {
+  const { user } = useAuth();
+
+  if (!user)                return <Navigate to="/" replace />;
+  if (user.role === "admin") return <Navigate to="/admin/dashboard" replace />;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <UserLayout>
-        <Outlet />
-      </UserLayout>
-    </div>
+    <UserLayout>
+      <Notifications />
+      <Outlet />
+      {/* ── AI Smart Assistant — available on every user page ── */}
+      <SmartAssistant />
+    </UserLayout>
   );
-}
+};
+
+export default UserShell;

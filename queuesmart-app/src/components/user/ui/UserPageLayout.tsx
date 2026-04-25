@@ -1,22 +1,29 @@
-import { ReactNode } from "react";
+// src/user/ui/UserPageLayout.tsx
+// Wraps every user page with a consistent header and scrollable body.
 
-export default function UserPageLayout({
-  title,
-  actions,
-  children,
-}: {
-  title: string;
-  actions?: ReactNode;
-  children: ReactNode;
-}) {
+import React from "react";
+
+type Props = {
+  title:    string;
+  children: React.ReactNode;
+};
+
+const UserPageLayout: React.FC<Props> = ({ title, children }) => {
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
-        {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
-      </div>
+    <div className="flex h-full flex-col">
 
-      <div className="space-y-6">{children}</div>
+      {/* Page header */}
+      <header className="flex flex-shrink-0 items-center
+        border-b border-gray-200 bg-white px-8 py-5 shadow-sm">
+        <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
+      </header>
+
+      {/* Scrollable body */}
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        {children}
+      </div>
     </div>
   );
-}
+};
+
+export default UserPageLayout;

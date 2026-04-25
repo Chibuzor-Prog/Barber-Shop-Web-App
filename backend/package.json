@@ -33,5 +33,10 @@
       }
     },
     "testTimeout": 30000
+  },
+  "config": {
+  "mongodbMemoryServer": {
+    "version": "6.0.12"
   }
+}
 }
