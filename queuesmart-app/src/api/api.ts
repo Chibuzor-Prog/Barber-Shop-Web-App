@@ -1,3 +1,27 @@
+// ── Reports ────────────────────────────────────────────────────────────────
+export const reportsApi = {
+  usersHistory: async (token: string) =>
+    apiRequest<any[]>('/reports/users-history', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    }),
+  serviceActivity: async (token: string) =>
+    apiRequest<any[]>('/reports/service-activity', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    }),
+  queueStats: async (token: string) =>
+    apiRequest<any>('/reports/queue-stats', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    }),
+};
 // MongoDB backend: port 5001   
 
 import BASE_URL from './config';

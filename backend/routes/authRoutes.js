@@ -96,6 +96,9 @@ router.post('/register', async (req, res) => {
 });
 
 // ── POST /auth/login ──────────────────────────────────────────────────────────
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key';
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -121,8 +124,12 @@ router.post('/login', async (req, res) => {
     // Fetch linked profile for the user's display name
     const profile = await UserProfile.findOne({ credentialId: cred._id });
 
+    // Generate JWT token
+    const token = jwt.sign({ id: cred._id, role: cred.role, email: cred.email }, JWT_SECRET, { expiresIn: '2h' });
+
     res.json({
       message: 'Login successful',
+      token,
       user: {
         id:    cred._id,
         name:  profile ? profile.fullName : cred.email,

@@ -12,6 +12,17 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
+    {
+      label: "Reports",
+      path:  "/admin/reports",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <path strokeLinecap="round" strokeLinejoin="round"
+            d="M9 17v-2a2 2 0 012-2h2a2 2 0 012 2v2m-6 0a2 2 0 002 2h2a2 2 0 002-2m-6 0V7a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2" />
+        </svg>
+      ),
+    },
   {
     label: "Dashboard",
     path:  "/admin/dashboard",

@@ -21,6 +21,7 @@ import AdminDashboard    from "./components/admin/AdminDashboard";
 import QueueManagement   from "./components/admin/QueueManagement";
 import ServiceManagement from "./components/admin/ServiceManagement";
 import AnalyticsDashboard from "./components/admin/AnalyticsDashboard";
+import AdminReports      from "./components/admin/AdminReports";
 
 // User pages
 import Dashboard   from "./components/user/Dashboard";
@@ -47,6 +48,7 @@ const App: React.FC = () => {
               <Route path="queue"         element={<QueueManagement />} />
               <Route path="services"      element={<ServiceManagement />} />
               <Route path="analytics"     element={<AnalyticsDashboard />} />
+              <Route path="reports"       element={<AdminReports />} />
             </Route>
 
             {/* ── User routes (UserShell checks user is logged in) ───── */}

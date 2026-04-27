@@ -42,9 +42,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Step 1: Called from Login page — authenticates against backend
   const login = async (email: string, password: string): Promise<void> => {
     const data = await authApi.login(email, password);
-    // Backend returns { message, user: { id, name, email, role } }
-    // id is a MongoDB ObjectId string — no password is ever stored here
+    // Backend returns { message, user: { id, name, email, role }, token }
     setTempUser(data.user as User);
+    if (data.token) {
+      localStorage.setItem("authToken", data.token);
+    }
   };
 
   // Step 2: Called from OTP page after code verification
@@ -57,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem("authUser");
+    localStorage.removeItem("authToken");
     setUser(null);
     setTempUser(null);
   };

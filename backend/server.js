@@ -10,6 +10,7 @@ const serviceRoutes      = require('./routes/serviceRoutes');
 const historyRoutes      = require('./routes/historyRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const profileRoutes      = require('./routes/profileRoutes');
+const reportRoutes       = require('./routes/reportRoutes');
 
 const app  = express();
 const PORT = process.env.PORT || 5001;
@@ -23,7 +24,9 @@ app.use('/queue',         queueRoutes);
 app.use('/services',      serviceRoutes);
 app.use('/history',       historyRoutes);
 app.use('/notifications', notificationRoutes);
+
 app.use('/profile',       profileRoutes);
+app.use('/reports',       reportRoutes);
 
 // ── Test-only reset endpoint ──────────────────────────────────────────────────
 if (process.env.NODE_ENV === 'test') {
