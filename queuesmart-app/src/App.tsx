@@ -1,4 +1,3 @@
-
 // Root application component — defines all routes.
 // Uses React Router v6 nested routes with AdminShell / UserShell as guards.
 
@@ -29,11 +28,18 @@ import JoinQueue   from "./components/user/JoinQueue";
 import QueueStatus from "./components/user/QueueStatus";
 import History     from "./components/user/History";
 
+// Global AI Translator Widget
+import SmartTranslator from "./components/SmartTranslator";
+
 const App: React.FC = () => {
   return (
     <AuthProvider>
       <QueueProvider>
         <BrowserRouter>
+          
+          {/* ── Floating AI Translator (Visible on all pages) ──────── */}
+          <SmartTranslator />
+
           <Routes>
 
             {/* ── Public routes ───────────────────────────────────────── */}
