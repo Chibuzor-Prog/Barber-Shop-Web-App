@@ -11,6 +11,7 @@ const historyRoutes      = require('./routes/historyRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const profileRoutes      = require('./routes/profileRoutes');
 const reportRoutes       = require('./routes/reportRoutes');
+const smartOpsRoutes     = require('./routes/smartOpsRoutes');
 
 const app  = express();
 const PORT = process.env.PORT || 5001;
@@ -27,6 +28,7 @@ app.use('/notifications', notificationRoutes);
 
 app.use('/profile',       profileRoutes);
 app.use('/reports',       reportRoutes);
+app.use('/smart-ops',     smartOpsRoutes);
 
 // ── Test-only reset endpoint ──────────────────────────────────────────────────
 if (process.env.NODE_ENV === 'test') {

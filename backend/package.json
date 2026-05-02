@@ -14,6 +14,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.3.4"
   },
   "devDependencies": {
@@ -35,8 +36,8 @@
     "testTimeout": 30000
   },
   "config": {
-  "mongodbMemoryServer": {
-    "version": "6.0.12"
+    "mongodbMemoryServer": {
+      "version": "6.0.12"
+    }
   }
-}
 }
